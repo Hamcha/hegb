@@ -1,14 +1,27 @@
-package main
+package hegb
 
 // CPU is an emulator of the Z80 CPU used in the Game Boy
 type CPU struct {
-	// Registers
-	AF register
-	BC register
-	DE register
-	HL register
-
 	Running bool
+
+	MMU *MMU
+
+	GPU *GPU
+
+	// Registers
+	af register
+	bc register
+	de register
+	hl register
+
+	sp uint16 // Stack pointer
+	pc uint16 // Program counter
+
+	cycles
+}
+
+func (c *CPU) Step() {
+	//TODO
 }
 
 type flags struct {
@@ -20,7 +33,7 @@ type flags struct {
 
 // flags return the current flag register in a nice struct
 func (c CPU) flags() flags {
-	flagbyte := c.AF.Right()
+	flagbyte := c.af.Right()
 	return flags{
 		Carry:     flagbyte&0x10 == 0x10,
 		HalfCarry: flagbyte&0x20 == 0x20,
@@ -43,7 +56,7 @@ func (c *CPU) setFlags(newflags flags) {
 	if newflags.Zero {
 		flagbyte |= 0x80
 	}
-	c.AF.SetRight(flagbyte)
+	c.af.SetRight(flagbyte)
 }
 
 // register represents a single register pair (16bit register that can be accessed as two 2 8bit registers)
@@ -69,4 +82,15 @@ func (r *register) SetLeft(val uint8) {
 // SetRight overwrites the right (LSB) byte
 func (r *register) SetRight(val uint8) {
 	r.Pair = (r.Pair & 0xff00) | uint16(val)
+}
+
+// CycleCount represents the number of cycles an operation took
+type cycles struct {
+	CPU     int
+	Machine int
+}
+
+func (c *cycles) Add(inc cycles) {
+	c.CPU += inc.CPU
+	c.Machine += inc.Machine
 }

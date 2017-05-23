@@ -1,17 +1,4 @@
-package main
-
-// CycleCount represents the number of cycles an operation took
-type CycleCount struct {
-	CPU     int
-	Machine int
-}
-
-// Handler handles exactly one instruction
-type Handler func(c *CPU) CycleCount
-
-func noop(c *CPU) CycleCount {
-	return CycleCount{1, 4}
-}
+package hegb
 
 // Instruction ID type
 type instruction uint16
@@ -534,6 +521,13 @@ const (
 	OpCbSetIndirectHL7                                 // fe SET 7,(HL)
 	OpCbSetDirectA7                                    // ff SET 7,A
 )
+
+// Handler handles exactly one instruction
+type Handler func(c *CPU) cycles
+
+func noop(c *CPU) cycles {
+	return cycles{1, 4}
+}
 
 var cpuhandlers = map[instruction]Handler{
 	OpNop: noop,
