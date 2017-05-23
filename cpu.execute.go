@@ -230,51 +230,51 @@ const (
 	OpReturnNC                                    // d0 RET NC
 	OpPopRegDE                                    // d1 POP DE
 	OpJumpAbsoluteNC                              // d2 JP  NC,a16
-	// d3 --
-	OpCallNC               // d4 CALL NC,a16
-	OpPushDE               // d5 PUSH DE
-	OpSubImmediateANoCarry // d6 SUB A,d8
-	OpRestart10            // d7 RST 10h
-	OpReturnCA             // d8 RET C
-	OpRETI                 // d9 RETI
-	OpJumpAbsoluteCA       // da JP  C,a16
-	// db --
-	OpCallCA // dc CALL C,a16
-	// dd --
-	OpSubImmediateACarry // de SBC A,d8
-	OpRestart18          // df RST 18h
-	OpLoadHighAbsA       // e0 LDH (a8),A
-	OpPopHL              // e1 POP HL
-	OpLoadHighMemCA      // e2 LD  (C),A
-	// e3 --
-	// e4 --
-	OpPushHL               // e5 PUSH HL
-	OpAndImmediateA        // e6 AND A,d8
-	OpRestart20            // e7 RST 20h
-	OpAddImmediateSignedSP // e8 ADD SP,r8
-	OpJumpAbsoluteHL       // e9 JP  (HL)
-	OpStoreMemA            // ea LD  (a16),A
-	// eb --
-	// ec --
-	// ed --
-	OpXorImmediateA // ee XOR A,d8
-	OpRestart28     // ef RST 28h
-	OpLoadHighRegA  // f0 LDH A,(a8)
-	OpPopAF         // f1 POP AF
-	OpLoadHighRegAC // f2 LD  A,(C)
-	OpResetInt      // f3 DI
-	// f4 --
-	OpPushAF         // f5 PUSH AF
-	OpOrImmediateA   // f6 OR  A,d8
-	OpRestart30      // f7 RES 30h
-	OpLoadOffsetHLSP // f8 LD  HL,SP+r8
-	OpLoadDirectSPHL // f9 LD  SP,HL
-	OpLoadMemA       // fa LD  A,(a16)
-	OpSetInt         // fb EI
-	// fc --
-	// fd --
-	OpCmpImmediateA // fe CP  A,d8
-	OpRestart38     // ff RST 38h
+	_                                             // d3 --
+	OpCallNC                                      // d4 CALL NC,a16
+	OpPushDE                                      // d5 PUSH DE
+	OpSubImmediateANoCarry                        // d6 SUB A,d8
+	OpRestart10                                   // d7 RST 10h
+	OpReturnCA                                    // d8 RET C
+	OpRETI                                        // d9 RETI
+	OpJumpAbsoluteCA                              // da JP  C,a16
+	_                                             // db --
+	OpCallCA                                      // dc CALL C,a16
+	_                                             // dd --
+	OpSubImmediateACarry                          // de SBC A,d8
+	OpRestart18                                   // df RST 18h
+	OpLoadHighAbsA                                // e0 LDH (a8),A
+	OpPopHL                                       // e1 POP HL
+	OpLoadHighMemCA                               // e2 LD  (C),A
+	_                                             // e3 --
+	_                                             // e4 --
+	OpPushHL                                      // e5 PUSH HL
+	OpAndImmediateA                               // e6 AND A,d8
+	OpRestart20                                   // e7 RST 20h
+	OpAddImmediateSignedSP                        // e8 ADD SP,r8
+	OpJumpAbsoluteHL                              // e9 JP  (HL)
+	OpStoreMemA                                   // ea LD  (a16),A
+	_                                             // eb --
+	_                                             // ec --
+	_                                             // ed --
+	OpXorImmediateA                               // ee XOR A,d8
+	OpRestart28                                   // ef RST 28h
+	OpLoadHighRegA                                // f0 LDH A,(a8)
+	OpPopAF                                       // f1 POP AF
+	OpLoadHighRegAC                               // f2 LD  A,(C)
+	OpResetInt                                    // f3 DI
+	_                                             // f4 --
+	OpPushAF                                      // f5 PUSH AF
+	OpOrImmediateA                                // f6 OR  A,d8
+	OpRestart30                                   // f7 RES 30h
+	OpLoadOffsetHLSP                              // f8 LD  HL,SP+r8
+	OpLoadDirectSPHL                              // f9 LD  SP,HL
+	OpLoadMemA                                    // fa LD  A,(a16)
+	OpSetInt                                      // fb EI
+	_                                             // fc --
+	_                                             // fd --
+	OpCmpImmediateA                               // fe CP  A,d8
+	OpRestart38                                   // ff RST 38h
 
 	// CB prefix operations
 	OpCbRotateRegBLeftRot   instruction = 0x100 + iota // 00 RLC B
