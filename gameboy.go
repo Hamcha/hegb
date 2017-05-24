@@ -24,7 +24,6 @@ func MakeGB(romdata *ROM, options EmulatorOptions) *Gameboy {
 		GPU: gpu,
 		MMU: mmu,
 	}
-	mmu.cpu = cpu
 
 	return &Gameboy{mmu, cpu, gpu, options}
 }
