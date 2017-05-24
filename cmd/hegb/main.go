@@ -27,11 +27,18 @@ func main() {
 	data, err := ioutil.ReadFile(flag.Arg(0))
 	assert(err)
 
-	rom := hegb.LoadROM(data)
-
 	if *romdata {
-		fmt.Println(rom)
+		header, err := hegb.GetROMHeader(data)
+		assert(err)
+		fmt.Println(header)
+		return
 	}
+
+	rom, err := hegb.LoadROM(data)
+	assert(err)
+
+	gb := hegb.MakeGB(rom)
+	gb.Run()
 }
 
 func assert(err error) {

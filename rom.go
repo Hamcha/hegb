@@ -7,19 +7,38 @@ import (
 	"strings"
 )
 
-// MemoryController is the required interface for any sort of ROM MBC
-type MemoryController interface {
-	Read() uint8
-	Write(addr uint16, data uint8)
-}
-
 // ROM defines the header and content of a ROM file
 type ROM struct {
 	Header     ROMHeader
 	Controller MemoryController
 }
 
-func LoadROM(data []byte) *ROM {
+// LoadROM loads a ROM file and returns a ROM object
+func LoadROM(data []byte) (*ROM, error) {
+	var err error
+	rom := new(ROM)
+	rom.Header, err = GetROMHeader(data)
+	if err != nil {
+		return rom, err
+	}
+
+	//TODO Make controller
+	// Create ROM MBC (Memory Bank Controller) from type
+	switch rom.Header.Type {
+	case ROMTypeONLY, ROMTypeRAM, ROMTypeRB:
+		rom.Controller, err = loadMBC0(rom.Header, data)
+		if err != nil {
+			return rom, err
+		}
+	default:
+		return rom, fmt.Errorf("unsupported ROM type (%s)", rom.Header.Type)
+	}
+
+	return rom, nil
+}
+
+// GetROMHeader parses the header of a ROM file
+func GetROMHeader(data []byte) (ROMHeader, error) {
 	headerPacked := struct {
 		Entrypoint      uint32
 		NintendoLogo    [0x30]byte
@@ -37,10 +56,12 @@ func LoadROM(data []byte) *ROM {
 		HeaderChecksum  uint8
 		GlobalChecksum  [2]byte
 	}{}
-	binary.Read(bytes.NewReader(data[0x100:]), binary.BigEndian, &headerPacked)
+	err := binary.Read(bytes.NewReader(data[0x100:]), binary.BigEndian, &headerPacked)
+	if err != nil {
+		return ROMHeader{}, err
+	}
 
-	rom := new(ROM)
-	rom.Header = ROMHeader{
+	return ROMHeader{
 		Entrypoint:      uint16(headerPacked.Entrypoint),
 		NintendoLogo:    headerPacked.NintendoLogo,
 		Title:           strings.Trim(string(headerPacked.Title[:]), "\000"),
@@ -54,11 +75,7 @@ func LoadROM(data []byte) *ROM {
 		RAMSize:         headerPacked.RAMSize,
 		Region:          headerPacked.DestCode,
 		MaskROMVersion:  headerPacked.MaskROMversion,
-	}
-
-	//TODO Make controller
-
-	return rom
+	}, nil
 }
 
 func (r ROM) String() string {
@@ -82,9 +99,9 @@ type ROMHeader struct {
 	MaskROMVersion  uint8
 }
 
-// ROM types
 type ROMType uint8
 
+// ROM types
 const (
 	ROMTypeONLY    ROMType = 0x00 // ROM Only (32kB)
 	ROMTypeRAM     ROMType = 0x08 // ROM + RAM
@@ -178,9 +195,9 @@ func (d ROMType) String() string {
 	return "<unknown>"
 }
 
-// ROM sizes
 type ROMSizeType uint8
 
+// ROM sizes
 const (
 	ROMSize32K  ROMSizeType = 0x00 //  32kB,   2 banks
 	ROMSize64K  ROMSizeType = 0x01 //  64kB,   4 banks
@@ -217,9 +234,9 @@ func (d ROMSizeType) String() string {
 	return "<unknown>"
 }
 
-//! RAM Sizes
 type RAMSizeType uint8
 
+// RAM sizes
 const (
 	RAMSizeNONE  RAMSizeType = 0x00 //   No RAM
 	RAMSize2KB   RAMSizeType = 0x01 //  2kB RAM
@@ -247,12 +264,14 @@ func (d RAMSizeType) String() string {
 	return "<unknown>"
 }
 
-//! Destination Code
 type DestinationCode uint8
 
+// Destination Code
 const (
-	RegionJapanese    DestinationCode = 0x00 // Japanese game
-	RegionNonJapanese DestinationCode = 0x01 // Non-Japanese game
+	// Japanese game
+	RegionJapanese DestinationCode = 0x00
+	// Non-Japanese game
+	RegionNonJapanese DestinationCode = 0x01
 )
 
 func (d DestinationCode) String() string {
@@ -267,6 +286,7 @@ func (d DestinationCode) String() string {
 
 type GBCFlag uint8
 
+// GBC special flags
 const (
 	GBCSupported GBCFlag = 0x80
 	GBCOnly      GBCFlag = 0xc0

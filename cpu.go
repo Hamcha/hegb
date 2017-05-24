@@ -5,36 +5,46 @@ type CPU struct {
 	Running bool
 
 	MMU *MMU
-
 	GPU *GPU
 
 	// Registers
-	af register
-	bc register
-	de register
-	hl register
+	AF Register
+	BC Register
+	DE Register
+	HL Register
 
-	sp uint16 // Stack pointer
-	pc uint16 // Program counter
+	PS uint16 // Stack pointer
+	PC uint16 // Program counter
 
-	cycles
+	Cycles
 }
 
+// Step executes a single CPU instruction
 func (c *CPU) Step() {
 	//TODO
 }
 
-type flags struct {
+// Run starts the CPU and blocks until the CPU is done (hopefully, never)
+func (c *CPU) Run() {
+	c.Running = true
+	for c.Running {
+		//TODO Clock accurate stepping
+		c.Step()
+	}
+}
+
+// Flags describe each flag in the flag register
+type Flags struct {
 	Carry     bool
 	HalfCarry bool
 	AddSub    bool
 	Zero      bool
 }
 
-// flags return the current flag register in a nice struct
-func (c CPU) flags() flags {
-	flagbyte := c.af.Right()
-	return flags{
+// Flags return the current flag register in a nice struct
+func (c CPU) Flags() Flags {
+	flagbyte := c.AF.Right()
+	return Flags{
 		Carry:     flagbyte&0x10 == 0x10,
 		HalfCarry: flagbyte&0x20 == 0x20,
 		AddSub:    flagbyte&0x40 == 0x40,
@@ -42,7 +52,8 @@ func (c CPU) flags() flags {
 	}
 }
 
-func (c *CPU) setFlags(newflags flags) {
+// SetFlags sets the flags to a specific value
+func (c *CPU) SetFlags(newflags Flags) {
 	var flagbyte uint8
 	if newflags.Carry {
 		flagbyte |= 0x10
@@ -56,41 +67,42 @@ func (c *CPU) setFlags(newflags flags) {
 	if newflags.Zero {
 		flagbyte |= 0x80
 	}
-	c.af.SetRight(flagbyte)
+	c.AF.SetRight(flagbyte)
 }
 
-// register represents a single register pair (16bit register that can be accessed as two 2 8bit registers)
-type register struct {
+// Register represents a single register pair (16bit register that can be accessed as two 2 8bit registers)
+type Register struct {
 	Pair uint16
 }
 
 // Left returns the left (MSB) byte
-func (r register) Left() uint8 {
+func (r Register) Left() uint8 {
 	return uint8(r.Pair >> 8)
 }
 
 // Right returns the right (LSB) byte
-func (r register) Right() uint8 {
+func (r Register) Right() uint8 {
 	return uint8(r.Pair)
 }
 
 // SetLeft overwrites the left (MSB) byte
-func (r *register) SetLeft(val uint8) {
+func (r *Register) SetLeft(val uint8) {
 	r.Pair = (uint16(val) << 8) | (r.Pair & 0xff)
 }
 
 // SetRight overwrites the right (LSB) byte
-func (r *register) SetRight(val uint8) {
+func (r *Register) SetRight(val uint8) {
 	r.Pair = (r.Pair & 0xff00) | uint16(val)
 }
 
-// CycleCount represents the number of cycles an operation took
-type cycles struct {
+// Cycles represents the number of cycles an operation took
+type Cycles struct {
 	CPU     int
 	Machine int
 }
 
-func (c *cycles) Add(inc cycles) {
+// Add adds a number of cycles to the current counters
+func (c *Cycles) Add(inc Cycles) {
 	c.CPU += inc.CPU
 	c.Machine += inc.Machine
 }
