@@ -523,10 +523,10 @@ const (
 )
 
 // Handler handles exactly one instruction
-type Handler func(c *CPU) cycles
+type Handler func(c *CPU) Cycles
 
-func noop(c *CPU) cycles {
-	return cycles{1, 4}
+func noop(c *CPU) Cycles {
+	return Cycles{1, 4}
 }
 
 var cpuhandlers = map[instruction]Handler{

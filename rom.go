@@ -99,6 +99,7 @@ type ROMHeader struct {
 	MaskROMVersion  uint8
 }
 
+// ROMType specifies a ROM's type (what MBC + components has)
 type ROMType uint8
 
 // ROM types
@@ -195,6 +196,7 @@ func (d ROMType) String() string {
 	return "<unknown>"
 }
 
+// ROMSizeType specifies the size format of the ROM (how many banks etc)
 type ROMSizeType uint8
 
 // ROM sizes
@@ -234,6 +236,7 @@ func (d ROMSizeType) String() string {
 	return "<unknown>"
 }
 
+// RAMSizeType specifies the RAM format
 type RAMSizeType uint8
 
 // RAM sizes
@@ -264,6 +267,7 @@ func (d RAMSizeType) String() string {
 	return "<unknown>"
 }
 
+// DestinationCode specifies the region of the ROM
 type DestinationCode uint8
 
 // Destination Code
@@ -284,6 +288,7 @@ func (d DestinationCode) String() string {
 	return "<unknown>"
 }
 
+// GBCFlag specifies what level of GBC support there is
 type GBCFlag uint8
 
 // GBC special flags

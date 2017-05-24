@@ -8,6 +8,7 @@ type Gameboy struct {
 	options EmulatorOptions
 }
 
+// EmulatorOptions specifies extra options for changing how the Game boy emulator runs
 type EmulatorOptions struct {
 	SkipBootstrap bool
 }
