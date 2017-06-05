@@ -1060,7 +1060,7 @@ func (i instruction) String() string {
 	case OpLoadImmediateDE:
 		return "LD  DE,d16"
 	case OpLoadIndirectDEA:
-		return "LD  (DE,A"
+		return "LD  (DE),A"
 	case OpIncrementDE:
 		return "INC DE"
 	case OpIncrementD:
@@ -1076,7 +1076,7 @@ func (i instruction) String() string {
 	case OpAddDirectHLDE:
 		return "ADD HL,DE"
 	case OpLoadIndirectADE:
-		return "LD  A,(DE"
+		return "LD  A,(DE)"
 	case OpDecrementDE:
 		return "DEC DE"
 	case OpIncrementE:
