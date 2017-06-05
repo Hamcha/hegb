@@ -2,8 +2,30 @@ package hegb
 
 import (
 	"errors"
+	"fmt"
+	"os"
 	"testing"
 )
+
+func TestLoadRegister(t *testing.T) {
+	gb := runCode([]byte{
+		0x01, 0x12, 0x34, // LD BC, 0x3412
+		0x11, 0x23, 0xff, // LD DE, 0xFF23
+		0x21, 0xaa, 0xbb, // LD HL, 0xBBAA
+		0x41, // LD B, C
+		0x63, // LD H, E
+		0x7a, // LD A, D
+	})
+
+	// Check values
+	checkReg(t, gb, map[RegID]uint16{
+		RegBC: 0x1212,
+		RegDE: 0xff23,
+		RegHL: 0x23aa,
+		RegA:  0xff,
+	})
+	checkCycles(t, gb, Cycles{12, 48})
+}
 
 func TestLoadImmediate16(t *testing.T) {
 	// Set registers to random known values
@@ -21,6 +43,7 @@ func TestLoadImmediate16(t *testing.T) {
 		RegHL: 0xbbaa,
 		RegSP: 0x0100,
 	})
+	checkCycles(t, gb, Cycles{12, 48})
 }
 
 func TestLoadImmediate8(t *testing.T) {
@@ -42,6 +65,7 @@ func TestLoadImmediate8(t *testing.T) {
 		RegHL: 0x5566,
 		RegA:  0x77,
 	})
+	checkCycles(t, gb, Cycles{14, 56})
 }
 
 func TestIncrement16(t *testing.T) {
@@ -58,6 +82,7 @@ func TestIncrement16(t *testing.T) {
 		RegHL: 1,
 		RegSP: 1,
 	})
+	checkCycles(t, gb, Cycles{4, 32})
 }
 
 func TestDecrement16(t *testing.T) {
@@ -74,17 +99,86 @@ func TestDecrement16(t *testing.T) {
 		RegHL: 0xffff,
 		RegSP: 0xffff,
 	})
+	checkCycles(t, gb, Cycles{4, 32})
+}
+
+func TestIncrement8(t *testing.T) {
+	gb := runCode([]byte{
+		0x04, // INC B
+		0x0c, // INC C
+		0x14, // INC D
+		0x1c, // INC E
+		0x24, // INC D
+		0x2c, // INC E
+	})
+
+	checkReg(t, gb, map[RegID]uint16{
+		RegBC: 0x0101,
+		RegDE: 0x0101,
+		RegHL: 0x0101,
+		RegSP: 0x0101,
+	})
+	checkCycles(t, gb, Cycles{6, 24})
+}
+
+func TestDecrement8(t *testing.T) {
+	gb := runCode([]byte{
+		0x05, // DEC B
+		0x0d, // DEC C
+		0x15, // DEC D
+		0x1d, // DEC E
+		0x25, // DEC H
+		0x2d, // DEC L
+	})
+
+	checkReg(t, gb, map[RegID]uint16{
+		RegBC: 0xffff,
+		RegDE: 0xffff,
+		RegHL: 0xffff,
+	})
+	checkCycles(t, gb, Cycles{6, 24})
 }
 
 // Test all instructions to check that they are all handled
 func TestHandlerPresence(t *testing.T) {
+	handled := 0
+	unhandled := 0
+	// Test standard instructions
+	for i := OpNop; i <= OpRestart38; i++ {
+		// There are some holes, skip them
+		if i == 0xfc || i == 0xfd || i == OpCBPrefix || i == 0xf4 || i == 0xeb || i == 0xec || i == 0xed || i == 0xe3 || i == 0xe4 || i == 0xdd || i == 0xdb || i == 0xd3 {
+			continue
+		}
+		if _, ok := cpuhandlers[i]; ok {
+			fmt.Fprintf(os.Stderr, "%02X | %s - OK\n", uint16(i), i)
+			handled++
+		} else {
+			fmt.Fprintf(os.Stderr, "%02X | %s - MISSING!\n", uint16(i), i)
+			unhandled++
+		}
+	}
 
+	// CB prefix instructions
+	for i := OpCbRotateRegBLeftRot; i <= OpCbSetDirectA7; i++ {
+		if _, ok := cpuhandlers[i]; ok {
+			fmt.Fprintf(os.Stderr, "CB %02X | %s - OK\n", uint16(i-OpCbRotateRegBLeftRot), i)
+			handled++
+		} else {
+			fmt.Fprintf(os.Stderr, "CB %02X | %s - MISSING!\n", uint16(i-OpCbRotateRegBLeftRot), i)
+			unhandled++
+		}
+	}
+
+	fmt.Fprintf(os.Stderr, "Summary: %d handled, %d missing (%.2f%% total)\n", handled, unhandled, (float32(handled) / float32(unhandled) * 100))
+	if unhandled > 0 {
+		t.Fail()
+	}
 }
 
 // Test framework
 
 func runCode(code []byte) *Gameboy {
-	rom := makeTestROM(code)
+	rom := makeTestROM(append(code, byte(OpStop)))
 	gb := MakeGB(rom, EmulatorOptions{
 		SkipBootstrap: true,
 		Test:          true,
@@ -102,7 +196,7 @@ func makeTestROM(code []byte) *ROM {
 			ROMSize:    ROMSize32K,
 			RAMSize:    RAMSizeNONE,
 		},
-		Controller: &testController{data: append(code, byte(OpStop))},
+		Controller: &testController{data: code},
 	}
 }
 
@@ -131,13 +225,22 @@ func checkReg(t *testing.T, gb *Gameboy, vals map[RegID]uint16) {
 		case RegAF, RegBC, RegDE, RegHL, RegSP:
 			act := uint16(*reg16(gb.cpu, regid))
 			if act != val {
-				t.Fatalf("Register %s expected to be %04x, is %04x instead", regid, val, act)
+				t.Fatalf("[Register mismatch] Register %s expected to be %04x, is %04x instead", regid, val, act)
 			}
 		case RegA, RegF, RegB, RegC, RegD, RegE, RegH, RegL:
 			act := getreg8(gb.cpu, regid)
 			if act != uint8(val) {
-				t.Fatalf("Register %s expected to be %02x, is %02x instead", regid, uint8(val), act)
+				t.Fatalf("[Register mismatch] Register %s expected to be %02x, is %02x instead", regid, uint8(val), act)
 			}
 		}
+	}
+}
+
+func checkCycles(t *testing.T, gb *Gameboy, cycles Cycles) {
+	if gb.cpu.Cycles.CPU != cycles.CPU {
+		t.Fatalf("[Cycle mismatch] Expected %d CPU cycles, got %d", cycles.CPU, gb.cpu.Cycles.CPU)
+	}
+	if gb.cpu.Cycles.Machine != cycles.Machine {
+		t.Fatalf("[Cycle mismatch] Expected %d machine cycles, got %d", cycles.Machine, gb.cpu.Cycles.Machine)
 	}
 }
