@@ -1,5 +1,9 @@
 package hegb
 
+import (
+	"encoding/binary"
+)
+
 // Instruction ID type
 type instruction uint16
 
@@ -523,12 +527,156 @@ const (
 )
 
 // Handler handles exactly one instruction
-type Handler func(c *CPU) Cycles
+type Handler func(c *CPU)
 
-func noop(c *CPU) Cycles {
-	return Cycles{1, 4}
+func noop(c *CPU) {
+	c.Cycles.Add(1, 4)
 }
 
 var cpuhandlers = map[instruction]Handler{
-	OpNop: noop,
+	OpNop:             noop,
+	OpLoadImmediateBC: loadi16(RegBC),
+	OpLoadImmediateDE: loadi16(RegDE),
+	OpLoadImmediateHL: loadi16(RegHL),
+	OpLoadImmediateSP: loadi16(RegSP),
+	OpStop:            halt,
+}
+
+func loadi16(regid RegID) Handler {
+	return func(c *CPU) {
+		reg := reg16(c, regid)
+		*reg = Register(nextu16(c))
+		c.Cycles.Add(3, 12)
+	}
+}
+
+func halt(c *CPU) {
+	//TODO Handle properly
+	if c.Test {
+		c.Running = false
+	}
+}
+
+type RegID uint8
+
+const (
+	RegAF RegID = iota
+	RegBC
+	RegDE
+	RegHL
+	RegSP
+	RegA
+	RegF
+	RegB
+	RegC
+	RegD
+	RegE
+	RegH
+	RegL
+)
+
+func (r RegID) String() string {
+	switch r {
+	case RegAF:
+		return "AF"
+	case RegBC:
+		return "BC"
+	case RegDE:
+		return "DE"
+	case RegHL:
+		return "HL"
+	case RegSP:
+		return "SP"
+	case RegA:
+		return "A"
+	case RegF:
+		return "F"
+	case RegB:
+		return "B"
+	case RegC:
+		return "C"
+	case RegD:
+		return "D"
+	case RegE:
+		return "E"
+	case RegH:
+		return "H"
+	case RegL:
+		return "L"
+	}
+	panic("unknown RegID")
+}
+
+func getreg8(c *CPU, id RegID) func() uint8 {
+	switch id {
+	case RegA:
+		return c.AF.Left
+	case RegF:
+		return c.AF.Right
+	case RegB:
+		return c.BC.Left
+	case RegC:
+		return c.BC.Right
+	case RegD:
+		return c.DE.Left
+	case RegE:
+		return c.DE.Right
+	case RegH:
+		return c.HL.Left
+	case RegL:
+		return c.HL.Right
+	}
+	panic("unknown RegID provided to getreg8")
+}
+
+func setreg8(c *CPU, id RegID, val uint8) func(uint8) {
+	switch id {
+	case RegA:
+		return c.AF.SetLeft
+	case RegF:
+		return c.AF.SetRight
+	case RegB:
+		return c.BC.SetLeft
+	case RegC:
+		return c.BC.SetRight
+	case RegD:
+		return c.DE.SetLeft
+	case RegE:
+		return c.DE.SetRight
+	case RegH:
+		return c.HL.SetLeft
+	case RegL:
+		return c.HL.SetRight
+	}
+	panic("unknown RegID provided to setreg8")
+}
+
+func reg16(c *CPU, id RegID) *Register {
+	switch id {
+	case RegAF:
+		return &c.AF
+	case RegBC:
+		return &c.BC
+	case RegDE:
+		return &c.DE
+	case RegHL:
+		return &c.HL
+	case RegSP:
+		return &c.SP
+	}
+	panic("unknown RegID provided to reg16")
+}
+
+// Read uint16 from memory
+func nextu16(c *CPU) uint16 {
+	val := binary.LittleEndian.Uint16([]byte{c.MMU.Read(uint16(c.PC)), c.MMU.Read(uint16(c.PC) + 1)})
+	c.PC += 2
+	return val
+}
+
+// Read uint8 from memory
+func nextu8(c *CPU) uint8 {
+	val := c.MMU.Read(uint16(c.PC))
+	c.PC++
+	return val
 }

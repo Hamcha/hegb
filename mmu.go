@@ -31,14 +31,122 @@ type ZRAM [128]byte
 
 // MMU manages access to the emulated Game boy memory
 type MMU struct {
-	WRAM
+	WRAM      WRAM
 	WRAMExtra []WRAM
 	WRAMID    uint8
 
 	UseBootstrap bool
 
-	ZRAM
+	InterruptMask uint8
+
+	ZRAM ZRAM
 
 	rom *ROM
 	gpu *GPU
+}
+
+func (m *MMU) Read(addr uint16) uint8 {
+	// 0000 - 00ff => Bootstrap, if enabled
+	if m.UseBootstrap && addr < 0x100 {
+		return bootstrap[addr]
+	}
+	// 0000 - 7fff => ROM banks
+	if addr < 0x8000 {
+		dat, err := m.rom.Controller.Read(addr)
+		assert("ROM read error", err)
+		return dat
+	}
+	// 8000 - 9fff => VRAM bank (switchable in GBC)
+	if addr < 0xa000 {
+		return m.gpu.vram[m.gpu.vramID][addr-0x8000]
+	}
+	// a000 - bfff => External RAM (switchable)
+	if addr < 0xc000 {
+		dat, err := m.rom.Controller.Read(addr)
+		assert("ROM read error", err)
+		return dat
+	}
+	// c000 - cfff => Work RAM fixed bank
+	if addr < 0xd000 {
+		return m.WRAM[addr-0xc000]
+	}
+	// d000 - dfff => Switchable Work RAM bank
+	if addr < 0xe000 {
+		return m.WRAMExtra[m.WRAMID][addr-0xd000]
+	}
+	// e000 - fdff => Mirror of c000 - ddff
+	if addr < 0xfe00 {
+		return m.Read(addr - 0x2000)
+	}
+	// fe00 - fe9f => Sprite attribute table
+	if addr < 0xfea0 {
+		panic("todo")
+	}
+	// fea0 - feff => Not usable
+	if addr < 0xff00 {
+		return 0
+	}
+	// ff00 - ff7f => I/O Registers
+	if addr < 0xff80 {
+		panic("todo")
+	}
+	// ff80 - fffe => High RAM (HRAM)
+	if addr < 0xffff {
+		return m.ZRAM[addr-0xff80]
+	}
+	// ffff => Interrupt mask
+	return m.InterruptMask
+}
+
+func (m *MMU) Write(addr uint16, value uint8) {
+	// 0000 - 7fff => ROM banks (usually non writable)
+	if addr < 0x8000 {
+		err := m.rom.Controller.Write(addr, value)
+		assert("ROM write error", err)
+		return
+	}
+	// 8000 - 9fff => VRAM bank (switchable in GBC)
+	if addr < 0xa000 {
+		m.gpu.vram[m.gpu.vramID][addr-0x8000] = value
+		return
+	}
+	// a000 - bfff => External RAM (switchable)
+	if addr < 0xc000 {
+		err := m.rom.Controller.Write(addr, value)
+		assert("ROM write error", err)
+		return
+	}
+	// c000 - cfff => Work RAM fixed bank
+	if addr < 0xd000 {
+		m.WRAM[addr-0xc000] = value
+		return
+	}
+	// d000 - dfff => Switchable Work RAM bank
+	if addr < 0xe000 {
+		m.WRAMExtra[m.WRAMID][addr-0xd000] = value
+		return
+	}
+	// e000 - fdff => Mirror of c000 - ddff (not writable)
+	if addr < 0xfe00 {
+		return
+	}
+	// fe00 - fe9f => Sprite attribute table
+	if addr < 0xfea0 {
+		panic("todo")
+	}
+	// fea0 - feff => Not usable
+	if addr < 0xff00 {
+		return
+	}
+	// ff00 - ff7f => I/O Registers
+	if addr < 0xff80 {
+		panic("todo")
+	}
+	// ff80 - fffe => High RAM (HRAM)
+	if addr < 0xffff {
+		m.ZRAM[addr-0xff80] = value
+		return
+	}
+	// ffff => Interrupt mask
+	m.InterruptMask = value
 }

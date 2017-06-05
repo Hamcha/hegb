@@ -1,5 +1,7 @@
 package hegb
 
+import "fmt"
+
 // Gameboy is an emulated Game boy
 type Gameboy struct {
 	mmu     *MMU
@@ -11,6 +13,7 @@ type Gameboy struct {
 // EmulatorOptions specifies extra options for changing how the Game boy emulator runs
 type EmulatorOptions struct {
 	SkipBootstrap bool
+	Test          bool
 }
 
 // MakeGB creates a Game Boy and loads the rom in it
@@ -21,8 +24,9 @@ func MakeGB(romdata *ROM, options EmulatorOptions) *Gameboy {
 		gpu: gpu,
 	}
 	cpu := &CPU{
-		GPU: gpu,
-		MMU: mmu,
+		GPU:  gpu,
+		MMU:  mmu,
+		Test: options.Test,
 	}
 
 	return &Gameboy{mmu, cpu, gpu, options}
@@ -30,5 +34,21 @@ func MakeGB(romdata *ROM, options EmulatorOptions) *Gameboy {
 
 // Run starts up the emulated game boy and blocks until execution ends
 func (g *Gameboy) Run() {
+	defer func() {
+		if r := recover(); r != nil {
+			g.dump()
+			panic(r)
+		}
+	}()
 	g.cpu.Run()
+}
+
+func (g *Gameboy) dump() {
+	g.cpu.Dump()
+}
+
+func assert(typ string, err error) {
+	if err != nil {
+		panic(fmt.Errorf("[%s] %s", typ, err))
+	}
 }
