@@ -73,12 +73,12 @@ func checkReg(t *testing.T, gb *Gameboy, vals map[RegID]uint16) {
 		case RegAF, RegBC, RegDE, RegHL, RegSP:
 			act := uint16(*reg16(gb.cpu, regid))
 			if act != val {
-				t.Fatalf("Register %s expected to be %04x, is %04x instead", regid, act, val)
+				t.Fatalf("Register %s expected to be %04x, is %04x instead", regid, val, act)
 			}
 		case RegA, RegF, RegB, RegC, RegD, RegE, RegH, RegL:
 			act := getreg8(gb.cpu, regid)()
 			if act != uint8(val) {
-				t.Fatalf("Register %s expected to be %02x, is %02x instead", regid, act, uint8(val))
+				t.Fatalf("Register %s expected to be %02x, is %02x instead", regid, uint8(val), act)
 			}
 		}
 	}
