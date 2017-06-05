@@ -138,6 +138,51 @@ func TestDecrement8(t *testing.T) {
 	})
 	checkCycles(t, gb, Cycles{6, 24})
 }
+func TestBitSet(t *testing.T) {
+	gb := runCode([]byte{
+		0xcb, 0xc7, // SET 0, A
+		0xcb, 0xdf, // SET 3, A
+		0xcb, 0xe8, // SET 5, B
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegA: 0x09,
+		RegB: 0x20,
+	})
+	checkCycles(t, gb, Cycles{6, 24})
+}
+
+func TestBitReset(t *testing.T) {
+	gb := runCode([]byte{
+		0x3e, 0xff, // LD A, 0xFF
+		0xcb, 0x8f, // RES 1, A
+		0xcb, 0xaf, // RES 5, A
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegA: 0xdd,
+	})
+	checkCycles(t, gb, Cycles{6, 24})
+}
+
+func TestBitCheck(t *testing.T) {
+	// Test with zero flag set
+	gb := runCode([]byte{
+		0x3e, 0xfd, // LD A, 0xFD
+		0xcb, 0x4f, // BIT 1, A
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegAF: 0xfda0,
+	})
+	checkCycles(t, gb, Cycles{4, 16})
+
+	// Should be zero now!
+	gb = runCode([]byte{
+		0x3e, 0xff, // LD A, 0xFD
+		0xcb, 0x4f, // BIT 1, A
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegAF: 0xff20,
+	})
+}
 
 // Test all instructions to check that they are all handled
 func TestHandlerPresence(t *testing.T) {
@@ -169,7 +214,7 @@ func TestHandlerPresence(t *testing.T) {
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, "Summary: %d handled, %d missing (%.2f%% total)\n", handled, unhandled, (float32(handled) / float32(unhandled) * 100))
+	fmt.Fprintf(os.Stderr, "Summary: %d handled, %d missing (%.2f%% total)\n", handled, unhandled, (float32(handled) / float32(handled+unhandled) * 100))
 	if unhandled > 0 {
 		t.Fail()
 	}
