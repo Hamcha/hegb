@@ -23,6 +23,59 @@ func TestLoadImmediate16(t *testing.T) {
 	})
 }
 
+func TestLoadImmediate8(t *testing.T) {
+	// Set registers to random known values
+	gb := runCode([]byte{
+		0x06, 0x11, // LD B, 0x11
+		0x0e, 0x22, // LD C, 0x22
+		0x16, 0x33, // LD D, 0x33
+		0x1e, 0x44, // LD E, 0x44
+		0x26, 0x55, // LD H, 0x55
+		0x2e, 0x66, // LD L, 0x66
+		0x3e, 0x77, // LD A, 0x77
+	})
+
+	// Check values
+	checkReg(t, gb, map[RegID]uint16{
+		RegBC: 0x1122,
+		RegDE: 0x3344,
+		RegHL: 0x5566,
+		RegA:  0x77,
+	})
+}
+
+func TestIncrement16(t *testing.T) {
+	gb := runCode([]byte{
+		0x03, // INC BC
+		0x13, // INC DE
+		0x23, // INC HL
+		0x33, // INC SP
+	})
+
+	checkReg(t, gb, map[RegID]uint16{
+		RegBC: 1,
+		RegDE: 1,
+		RegHL: 1,
+		RegSP: 1,
+	})
+}
+
+func TestDecrement16(t *testing.T) {
+	gb := runCode([]byte{
+		0x0b, // DEC BC
+		0x1b, // DEC DE
+		0x2b, // DEC HL
+		0x3b, // DEC SP
+	})
+
+	checkReg(t, gb, map[RegID]uint16{
+		RegBC: 0xffff,
+		RegDE: 0xffff,
+		RegHL: 0xffff,
+		RegSP: 0xffff,
+	})
+}
+
 // Test framework
 
 func runCode(code []byte) *Gameboy {
@@ -76,7 +129,7 @@ func checkReg(t *testing.T, gb *Gameboy, vals map[RegID]uint16) {
 				t.Fatalf("Register %s expected to be %04x, is %04x instead", regid, val, act)
 			}
 		case RegA, RegF, RegB, RegC, RegD, RegE, RegH, RegL:
-			act := getreg8(gb.cpu, regid)()
+			act := getreg8(gb.cpu, regid)
 			if act != uint8(val) {
 				t.Fatalf("Register %s expected to be %02x, is %02x instead", regid, uint8(val), act)
 			}

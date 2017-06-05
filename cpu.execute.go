@@ -535,18 +535,53 @@ func noop(c *CPU) {
 
 var cpuhandlers = map[instruction]Handler{
 	OpNop:             noop,
-	OpLoadImmediateBC: loadi16(RegBC),
-	OpLoadImmediateDE: loadi16(RegDE),
-	OpLoadImmediateHL: loadi16(RegHL),
-	OpLoadImmediateSP: loadi16(RegSP),
+	OpLoadImmediateBC: loadImmediate16(RegBC),
+	OpLoadImmediateDE: loadImmediate16(RegDE),
+	OpLoadImmediateHL: loadImmediate16(RegHL),
+	OpLoadImmediateSP: loadImmediate16(RegSP),
+	OpLoadImmediateA:  loadImmediate8(RegA),
+	OpLoadImmediateB:  loadImmediate8(RegB),
+	OpLoadImmediateC:  loadImmediate8(RegC),
+	OpLoadImmediateD:  loadImmediate8(RegD),
+	OpLoadImmediateE:  loadImmediate8(RegE),
+	OpLoadImmediateH:  loadImmediate8(RegH),
+	OpLoadImmediateL:  loadImmediate8(RegL),
+	OpIncrementBC:     increment16(RegBC),
+	OpIncrementDE:     increment16(RegDE),
+	OpIncrementHL:     increment16(RegHL),
+	OpIncrementSP:     increment16(RegSP),
+	OpDecrementBC:     decrement16(RegBC),
+	OpDecrementDE:     decrement16(RegDE),
+	OpDecrementHL:     decrement16(RegHL),
+	OpDecrementSP:     decrement16(RegSP),
 	OpStop:            halt,
 }
 
-func loadi16(regid RegID) Handler {
+func loadImmediate8(regid RegID) Handler {
 	return func(c *CPU) {
-		reg := reg16(c, regid)
-		*reg = Register(nextu16(c))
+		setreg8(c, regid, nextu8(c))
+		c.Cycles.Add(2, 8)
+	}
+}
+
+func loadImmediate16(regid RegID) Handler {
+	return func(c *CPU) {
+		*reg16(c, regid) = Register(nextu16(c))
 		c.Cycles.Add(3, 12)
+	}
+}
+
+func increment16(regid RegID) Handler {
+	return func(c *CPU) {
+		*reg16(c, regid)++
+		c.Cycles.Add(1, 8)
+	}
+}
+
+func decrement16(regid RegID) Handler {
+	return func(c *CPU) {
+		*reg16(c, regid)--
+		c.Cycles.Add(1, 8)
 	}
 }
 
@@ -607,48 +642,49 @@ func (r RegID) String() string {
 	panic("unknown RegID")
 }
 
-func getreg8(c *CPU, id RegID) func() uint8 {
+func getreg8(c *CPU, id RegID) uint8 {
 	switch id {
 	case RegA:
-		return c.AF.Left
+		return c.AF.Left()
 	case RegF:
-		return c.AF.Right
+		return c.AF.Right()
 	case RegB:
-		return c.BC.Left
+		return c.BC.Left()
 	case RegC:
-		return c.BC.Right
+		return c.BC.Right()
 	case RegD:
-		return c.DE.Left
+		return c.DE.Left()
 	case RegE:
-		return c.DE.Right
+		return c.DE.Right()
 	case RegH:
-		return c.HL.Left
+		return c.HL.Left()
 	case RegL:
-		return c.HL.Right
+		return c.HL.Right()
 	}
-	panic("unknown RegID provided to getreg8")
+	panic("invalid RegID provided to getreg8")
 }
 
-func setreg8(c *CPU, id RegID, val uint8) func(uint8) {
+func setreg8(c *CPU, id RegID, val uint8) {
 	switch id {
 	case RegA:
-		return c.AF.SetLeft
+		c.AF.SetLeft(val)
 	case RegF:
-		return c.AF.SetRight
+		c.AF.SetRight(val)
 	case RegB:
-		return c.BC.SetLeft
+		c.BC.SetLeft(val)
 	case RegC:
-		return c.BC.SetRight
+		c.BC.SetRight(val)
 	case RegD:
-		return c.DE.SetLeft
+		c.DE.SetLeft(val)
 	case RegE:
-		return c.DE.SetRight
+		c.DE.SetRight(val)
 	case RegH:
-		return c.HL.SetLeft
+		c.HL.SetLeft(val)
 	case RegL:
-		return c.HL.SetRight
+		c.HL.SetRight(val)
+	default:
+		panic("invalid RegID provided to setreg8")
 	}
-	panic("unknown RegID provided to setreg8")
 }
 
 func reg16(c *CPU, id RegID) *Register {
@@ -664,7 +700,7 @@ func reg16(c *CPU, id RegID) *Register {
 	case RegSP:
 		return &c.SP
 	}
-	panic("unknown RegID provided to reg16")
+	panic("invalid RegID provided to reg16")
 }
 
 // Read uint16 from memory
