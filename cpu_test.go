@@ -76,6 +76,11 @@ func TestDecrement16(t *testing.T) {
 	})
 }
 
+// Test all instructions to check that they are all handled
+func TestHandlerPresence(t *testing.T) {
+
+}
+
 // Test framework
 
 func runCode(code []byte) *Gameboy {
