@@ -20,13 +20,19 @@ type EmulatorOptions struct {
 func MakeGB(romdata *ROM, options EmulatorOptions) *Gameboy {
 	gpu := &GPU{}
 	mmu := &MMU{
-		rom: romdata,
-		gpu: gpu,
+		rom:          romdata,
+		gpu:          gpu,
+		UseBootstrap: !options.SkipBootstrap,
 	}
 	cpu := &CPU{
 		GPU:  gpu,
 		MMU:  mmu,
 		Test: options.Test,
+	}
+
+	// If bootstrap is skipped, skip to entrypoint
+	if options.SkipBootstrap {
+		cpu.PC = Register(romdata.Header.Entrypoint)
 	}
 
 	return &Gameboy{mmu, cpu, gpu, options}

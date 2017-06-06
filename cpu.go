@@ -48,7 +48,7 @@ func (c *CPU) Step() {
 	fn, ok := cpuhandlers[opid]
 	if !ok {
 		// If not, panic!
-		panic(fmt.Errorf("operation not implemented: %d", opid))
+		panic(fmt.Errorf("operation not implemented: [%02X] %s", uint8(opid), opid))
 	}
 	fn(c)
 }
