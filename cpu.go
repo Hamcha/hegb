@@ -23,6 +23,8 @@ type CPU struct {
 	PC Register // Program counter
 
 	Cycles Cycles
+
+	InterruptEnable bool
 }
 
 // Step executes a single CPU instruction
@@ -54,6 +56,7 @@ func (c *CPU) Step() {
 // Run starts the CPU and blocks until the CPU is done (hopefully, never)
 func (c *CPU) Run() {
 	c.Running = true
+	c.InterruptEnable = false
 	for c.Running {
 		//TODO Clock accurate stepping
 		c.Step()

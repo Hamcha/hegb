@@ -174,7 +174,7 @@ func TestBitCheck(t *testing.T) {
 	})
 	checkCycles(t, gb, Cycles{4, 16})
 
-	// Should be zero now!
+	// Check that zero flag is clear after this one
 	gb = runCode([]byte{
 		0x3e, 0xff, // LD A, 0xFD
 		0xcb, 0x4f, // BIT 1, A
@@ -182,6 +182,21 @@ func TestBitCheck(t *testing.T) {
 	checkReg(t, gb, map[RegID]uint16{
 		RegAF: 0xff20,
 	})
+}
+
+func TestSwapNibble(t *testing.T) {
+	gb := runCode([]byte{
+		0x3e, 0xdf, // LD A, 0xDF
+		0xcb, 0x37, // SWAP A
+		// Extra: Check zero flag
+		0x06, 0x00, // LD B, 0x00
+		0xcb, 0x30, // SWAP B
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegAF: 0xfd80,
+		RegB:  0,
+	})
+	checkCycles(t, gb, Cycles{8, 32})
 }
 
 // Test all instructions to check that they are all handled
