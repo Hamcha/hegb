@@ -199,6 +199,79 @@ func TestSwapNibble(t *testing.T) {
 	checkCycles(t, gb, Cycles{8, 32})
 }
 
+func TestCBRotate(t *testing.T) {
+	gb := runCode([]byte{
+		0x3e, 0xf0, // LD A, 0xF0
+		0x06, 0x0f, // LD B, 0x0F
+		0x0e, 0xf0, // LD C, 0xF0
+		0x16, 0x0f, // LD D, 0x0F
+		0xcb, 0x07, // RLC A
+		0xcb, 0x08, // RRC B
+		0xcb, 0x11, // RL C
+		0xcb, 0x1a, // RR D
+		// Reset carry flag
+		0xcb, 0x37, // SWAP A
+		// Check WithCarry rotation with carry not set
+		0xcb, 0x11, // RL C
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegAF: 0x1e10,
+		RegB:  0x87,
+		RegC:  0xc2,
+		RegD:  0x87,
+	})
+	checkCycles(t, gb, Cycles{20, 80})
+}
+
+func TestCBShift(t *testing.T) {
+	gb := runCode([]byte{
+		0x3e, 0xf0, // LD A, 0xF0
+		0x06, 0xff, // LD B, 0x0F
+		0x0e, 0xff, // LD C, 0xFF
+		0xcb, 0x27, // SLA A
+		0xcb, 0x38, // SRL B
+		0xcb, 0x29, // SRA C
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegAF: 0xe010,
+		RegB:  0x7f,
+		RegC:  0xff,
+	})
+	checkCycles(t, gb, Cycles{12, 48})
+}
+
+func TestRotateAcc(t *testing.T) {
+	checkReg(t, runCode([]byte{
+		0x3e, 0xf0, // LD A, 0xF0
+		0x07, // RLCA
+	}), map[RegID]uint16{
+		RegAF: 0xe110,
+	})
+
+	checkReg(t, runCode([]byte{
+		0x3e, 0xf0, // LD A, 0xF0
+		0x0f, // RRCA
+	}), map[RegID]uint16{
+		RegAF: 0x7800,
+	})
+
+	checkReg(t, runCode([]byte{
+		0x3e, 0xf0, // LD A, 0xF0
+		0x17, // RLA
+	}), map[RegID]uint16{
+		RegAF: 0xe010,
+	})
+
+	gb := runCode([]byte{
+		0x3e, 0xff, // LD A, 0xF0
+		0x1f, // RRA
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegAF: 0x7f10,
+	})
+	checkCycles(t, gb, Cycles{3, 12})
+}
+
 // Test all instructions to check that they are all handled
 func TestHandlerPresence(t *testing.T) {
 	handled := 0

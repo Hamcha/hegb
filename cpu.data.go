@@ -12,7 +12,7 @@ const (
 	OpIncrementB                                  // 04 INC B
 	OpDecrementB                                  // 05 DEC B
 	OpLoadImmediateB                              // 06 LD  B,d8
-	OpRotateAccLeftDrop                           // 07 RLCA
+	OpRotateAccLeftRotate                         // 07 RLCA
 	OpStoreMemSP                                  // 08 LD  (a16),SP
 	OpAddDirectHLBC                               // 09 ADD HL,BC
 	OpLoadIndirectABC                             // 0a LD  A,(BC)
@@ -20,7 +20,7 @@ const (
 	OpIncrementC                                  // 0c INC C
 	OpDecrementC                                  // 0d DEC C
 	OpLoadImmediateC                              // 0e LD  C,d8
-	OpRotateAccRightDrop                          // 0f RRCA
+	OpRotateAccRightRotate                        // 0f RRCA
 	OpStop                                        // 10 STOP
 	OpLoadImmediateDE                             // 11 LD  DE,d16
 	OpLoadIndirectDEA                             // 12 LD  (DE),A
@@ -539,7 +539,7 @@ func (i instruction) String() string {
 		return "DEC B"
 	case OpLoadImmediateB:
 		return "LD  B,d8"
-	case OpRotateAccLeftDrop:
+	case OpRotateAccLeftRotate:
 		return "RLCA"
 	case OpStoreMemSP:
 		return "LD  (a16),SP"
@@ -555,7 +555,7 @@ func (i instruction) String() string {
 		return "DEC C"
 	case OpLoadImmediateC:
 		return "LD  C,d8"
-	case OpRotateAccRightDrop:
+	case OpRotateAccRightRotate:
 		return "RRCA"
 	case OpStop:
 		return "STOP"
