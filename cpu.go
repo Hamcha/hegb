@@ -125,12 +125,12 @@ func (r *Register) SetRight(val uint8) {
 
 // Cycles represents the number of cycles an operation took
 type Cycles struct {
-	CPU     int
 	Machine int
+	CPU     int
 }
 
 // Add adds a number of cycles to the current counters
-func (c *Cycles) Add(cpu, machine int) {
+func (c *Cycles) Add(machine, cpu int) {
 	c.CPU += cpu
 	c.Machine += machine
 }
