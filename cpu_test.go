@@ -322,6 +322,45 @@ func TestLoadHighMemC(t *testing.T) {
 	checkCycles(t, gb, Cycles{10, 40})
 }
 
+func TestAnd(t *testing.T) {
+	gb := runCode([]byte{
+		0x0e, 0x81, // LD C, 0x81
+		0x3e, 0x10, // LD A, 0x10
+		0xa1,       // AND C
+		0xe6, 0x01, // AND 0x01
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegAF: 0x00a0,
+	})
+	checkCycles(t, gb, Cycles{7, 28})
+}
+
+func TestOr(t *testing.T) {
+	gb := runCode([]byte{
+		0x0e, 0x81, // LD C, 0x80
+		0x3e, 0x10, // LD A, 0x10
+		0xb1,       // OR C
+		0xf6, 0x01, // OR 0x01
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegAF: 0x9100,
+	})
+	checkCycles(t, gb, Cycles{7, 28})
+}
+
+func TestXor(t *testing.T) {
+	gb := runCode([]byte{
+		0x0e, 0x81, // LD C, 0x81
+		0x3e, 0x10, // LD A, 0x10
+		0xa9,       // XOR C
+		0xee, 0x91, // XOR 0x91
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegAF: 0x0080,
+	})
+	checkCycles(t, gb, Cycles{7, 28})
+}
+
 // Test all instructions to check that they are all handled
 func TestHandlerPresence(t *testing.T) {
 	handled := 0
@@ -378,7 +417,7 @@ func runCode(code []byte) *Gameboy {
 func makeTestROM(code []byte) *ROM {
 	return &ROM{
 		Header: ROMHeader{
-			Entrypoint: 0x200,
+			Entrypoint: 0,
 			Title:      "TEST",
 			Type:       ROMTypeONLY,
 			ROMSize:    ROMSize32K,

@@ -124,6 +124,33 @@ var cpuhandlers = map[instruction]Handler{
 	OpInvertA:                 invertA,
 	OpSetCarry:                setCarry(false),
 	OpFlipCarry:               setCarry(true),
+	OpAndDirectAA:             andReg(RegA),
+	OpAndDirectAB:             andReg(RegB),
+	OpAndDirectAC:             andReg(RegC),
+	OpAndDirectAD:             andReg(RegD),
+	OpAndDirectAE:             andReg(RegE),
+	OpAndDirectAH:             andReg(RegH),
+	OpAndDirectAL:             andReg(RegL),
+	OpAndIndirectAHL:          andReg(RegHLInd),
+	OpAndImmediateA:           andImmediate,
+	OpOrDirectAA:              orReg(RegA),
+	OpOrDirectAB:              orReg(RegB),
+	OpOrDirectAC:              orReg(RegC),
+	OpOrDirectAD:              orReg(RegD),
+	OpOrDirectAE:              orReg(RegE),
+	OpOrDirectAH:              orReg(RegH),
+	OpOrDirectAL:              orReg(RegL),
+	OpOrIndirectAHL:           orReg(RegHLInd),
+	OpOrImmediateA:            orImmediate,
+	OpXorDirectAA:             xorReg(RegA),
+	OpXorDirectAB:             xorReg(RegB),
+	OpXorDirectAC:             xorReg(RegC),
+	OpXorDirectAD:             xorReg(RegD),
+	OpXorDirectAE:             xorReg(RegE),
+	OpXorDirectAH:             xorReg(RegH),
+	OpXorDirectAL:             xorReg(RegL),
+	OpXorIndirectAHL:          xorReg(RegHLInd),
+	OpXorImmediateA:           xorImmediate,
 	OpCbBitDirectA0:           bit(RegA, 0),
 	OpCbBitDirectA1:           bit(RegA, 1),
 	OpCbBitDirectA2:           bit(RegA, 2),
@@ -506,6 +533,90 @@ func setCarry(invert bool) Handler {
 		c.SetFlags(flags)
 		c.Cycles.Add(1, 4)
 	}
+}
+
+func xorReg(regid RegID) Handler {
+	return func(c *CPU) {
+		val := c.AF.Left() ^ getreg8(c, regid)
+		c.AF.SetLeft(val)
+
+		c.SetFlags(Flags{
+			Zero:      val == 0,
+			AddSub:    false,
+			HalfCarry: false,
+			Carry:     false,
+		})
+		c.Cycles.Add(1, 4)
+	}
+}
+
+func xorImmediate(c *CPU) {
+	val := c.AF.Left() ^ nextu8(c)
+	c.AF.SetLeft(val)
+
+	c.SetFlags(Flags{
+		Zero:      val == 0,
+		AddSub:    false,
+		HalfCarry: false,
+		Carry:     false,
+	})
+	c.Cycles.Add(2, 8)
+}
+
+func andReg(regid RegID) Handler {
+	return func(c *CPU) {
+		val := c.AF.Left() & getreg8(c, regid)
+		c.AF.SetLeft(val)
+
+		c.SetFlags(Flags{
+			Zero:      val == 0,
+			AddSub:    false,
+			HalfCarry: true,
+			Carry:     false,
+		})
+		c.Cycles.Add(1, 4)
+	}
+}
+
+func andImmediate(c *CPU) {
+	val := c.AF.Left() & nextu8(c)
+	c.AF.SetLeft(val)
+
+	c.SetFlags(Flags{
+		Zero:      val == 0,
+		AddSub:    false,
+		HalfCarry: true,
+		Carry:     false,
+	})
+	c.Cycles.Add(2, 8)
+}
+
+func orReg(regid RegID) Handler {
+	return func(c *CPU) {
+		val := c.AF.Left() | getreg8(c, regid)
+		c.AF.SetLeft(val)
+
+		c.SetFlags(Flags{
+			Zero:      val == 0,
+			AddSub:    false,
+			HalfCarry: false,
+			Carry:     false,
+		})
+		c.Cycles.Add(1, 4)
+	}
+}
+
+func orImmediate(c *CPU) {
+	val := c.AF.Left() | nextu8(c)
+	c.AF.SetLeft(val)
+
+	c.SetFlags(Flags{
+		Zero:      val == 0,
+		AddSub:    false,
+		HalfCarry: false,
+		Carry:     false,
+	})
+	c.Cycles.Add(2, 8)
 }
 
 func bit(regid RegID, bitNum uint8) Handler {
