@@ -57,6 +57,7 @@ func (c *CPU) Step() {
 func (c *CPU) Run() {
 	c.Running = true
 	c.InterruptEnable = false
+	c.SP = 0xfffe
 	for c.Running {
 		//TODO Clock accurate stepping
 		c.Step()

@@ -214,7 +214,7 @@ const (
 	OpAddImmediateACarry                          // ce ADC A,d8
 	OpRestart08                                   // cf RST 08h
 	OpReturnNC                                    // d0 RET NC
-	OpPopRegDE                                    // d1 POP DE
+	OpPopDE                                       // d1 POP DE
 	OpJumpAbsoluteNC                              // d2 JP  NC,a16
 	_                                             // d3 --
 	OpCallNC                                      // d4 CALL NC,a16
@@ -943,7 +943,7 @@ func (i instruction) String() string {
 		return "RST 08h"
 	case OpReturnNC:
 		return "RET NC"
-	case OpPopRegDE:
+	case OpPopDE:
 		return "POP DE"
 	case OpJumpAbsoluteNC:
 		return "JP  NC,a16"
@@ -1541,6 +1541,7 @@ const (
 	RegDE
 	RegHL
 	RegSP
+	RegPC
 	RegA
 	RegF
 	RegB
@@ -1567,6 +1568,8 @@ func (r RegID) String() string {
 		return "HL"
 	case RegSP:
 		return "SP"
+	case RegPC:
+		return "PC"
 	case RegA:
 		return "A"
 	case RegF:

@@ -94,7 +94,11 @@ var cpuhandlers = map[instruction]Handler{
 	OpLoadIndirectADE:         loadRegister(RegA, RegDEInd),
 	OpLoadHighMemCA:           loadRegister(RegCInd, RegA),
 	OpLoadHighRegAC:           loadRegister(RegA, RegCInd),
+	OpLoadHighAbsA:            storeHighA,
+	OpLoadHighRegA:            loadHighA,
 	OpLoadDirectSPHL:          loadRegister16(RegSP, RegHL),
+	OpStoreMemSP:              storeSP,
+	OpStoreMemA:               storeA,
 	OpIncrementBC:             increment16(RegBC),
 	OpIncrementDE:             increment16(RegDE),
 	OpIncrementHL:             increment16(RegHL),
@@ -124,6 +128,14 @@ var cpuhandlers = map[instruction]Handler{
 	OpInvertA:                 invertA,
 	OpSetCarry:                setCarry(false),
 	OpFlipCarry:               setCarry(true),
+	OpPushAF:                  push16(RegAF),
+	OpPushBC:                  push16(RegBC),
+	OpPushDE:                  push16(RegDE),
+	OpPushHL:                  push16(RegHL),
+	OpPopAF:                   pop16(RegAF),
+	OpPopBC:                   pop16(RegBC),
+	OpPopDE:                   pop16(RegDE),
+	OpPopHL:                   pop16(RegHL),
 	OpAndDirectAA:             andReg(RegA),
 	OpAndDirectAB:             andReg(RegB),
 	OpAndDirectAC:             andReg(RegC),
@@ -151,6 +163,25 @@ var cpuhandlers = map[instruction]Handler{
 	OpXorDirectAL:             xorReg(RegL),
 	OpXorIndirectAHL:          xorReg(RegHLInd),
 	OpXorImmediateA:           xorImmediate,
+	OpRestart00:               restart(0x00),
+	OpRestart08:               restart(0x08),
+	OpRestart10:               restart(0x10),
+	OpRestart18:               restart(0x18),
+	OpRestart20:               restart(0x20),
+	OpRestart28:               restart(0x28),
+	OpRestart30:               restart(0x30),
+	OpRestart38:               restart(0x38),
+	OpJumpAbsoluteNO:          jumpa16(fNone),
+	OpJumpAbsoluteCA:          jumpa16(fCarry),
+	OpJumpAbsoluteNC:          jumpa16(fNotCarry),
+	OpJumpAbsoluteZE:          jumpa16(fZero),
+	OpJumpAbsoluteNZ:          jumpa16(fNotZero),
+	OpJumpAbsoluteHL:          jumpHL,
+	OpJumpRelativeNO:          jumpr8(fNone),
+	OpJumpRelativeCA:          jumpr8(fCarry),
+	OpJumpRelativeNC:          jumpr8(fNotCarry),
+	OpJumpRelativeZE:          jumpr8(fZero),
+	OpJumpRelativeNZ:          jumpr8(fNotZero),
 	OpCbBitDirectA0:           bit(RegA, 0),
 	OpCbBitDirectA1:           bit(RegA, 1),
 	OpCbBitDirectA2:           bit(RegA, 2),
@@ -448,6 +479,29 @@ func loadRegister16(regtgt, regsrc RegID) Handler {
 	}
 }
 
+func storeHighA(c *CPU) {
+	c.MMU.Write(0xff00+uint16(nextu8(c)), c.AF.Left())
+	c.Cycles.Add(2, 12)
+}
+
+func loadHighA(c *CPU) {
+	c.AF.SetLeft(c.MMU.Read(0xff00 + uint16(nextu8(c))))
+	c.Cycles.Add(2, 12)
+}
+
+func storeA(c *CPU) {
+	addr := nextu16(c)
+	c.MMU.Write(addr, c.AF.Left())
+	c.Cycles.Add(3, 16)
+}
+
+func storeSP(c *CPU) {
+	addr := nextu16(c)
+	c.MMU.Write(addr, c.SP.Right())
+	c.MMU.Write(addr+1, c.SP.Left())
+	c.Cycles.Add(3, 20)
+}
+
 func increment16(regid RegID) Handler {
 	return func(c *CPU) {
 		checkind(c, regid)
@@ -501,6 +555,13 @@ func halt(c *CPU) {
 	//TODO Handle properly
 	if c.Test {
 		c.Running = false
+	}
+}
+
+func restart(offset uint8) Handler {
+	return func(c *CPU) {
+		push16(RegPC)(c)
+		c.PC = Register(offset)
 	}
 }
 
@@ -671,6 +732,26 @@ func bswap(regid RegID) Handler {
 	}
 }
 
+func push16(regid RegID) Handler {
+	return func(c *CPU) {
+		val := *reg16(c, regid)
+		c.MMU.Write(uint16(c.SP)-1, val.Left())
+		c.MMU.Write(uint16(c.SP)-2, val.Right())
+		c.SP -= 2
+		c.Cycles.Add(1, 16)
+	}
+}
+
+func pop16(regid RegID) Handler {
+	return func(c *CPU) {
+		val := reg16(c, regid)
+		val.SetRight(c.MMU.Read(uint16(c.SP)))
+		val.SetLeft(c.MMU.Read(uint16(c.SP) + 1))
+		c.SP += 2
+		c.Cycles.Add(1, 12)
+	}
+}
+
 type rDir int
 
 const (
@@ -767,6 +848,55 @@ func rotateReg(regid RegID, dir rDir, rop rOp, typ rOpcodeType) Handler {
 	}
 }
 
+type flagID uint8
+
+const (
+	fNone flagID = iota
+	fCarry
+	fZero
+	fNotCarry
+	fNotZero
+)
+
+func jumpa16(flag flagID) Handler {
+	return func(c *CPU) {
+		flags := c.Flags()
+		addr := nextu16(c)
+		taken := flag == fNone ||
+			(flag == fCarry && flags.Carry) ||
+			(flag == fZero && flags.Zero) ||
+			(flag == fNotCarry && !flags.Carry) ||
+			(flag == fNotZero && !flags.Zero)
+		if taken {
+			c.PC = Register(addr)
+			c.Cycles.Add(0, 4)
+		}
+		c.Cycles.Add(3, 12)
+	}
+}
+
+func jumpHL(c *CPU) {
+	c.PC = c.HL
+	c.Cycles.Add(1, 4)
+}
+
+func jumpr8(flag flagID) Handler {
+	return func(c *CPU) {
+		flags := c.Flags()
+		addr := nextu8(c)
+		taken := flag == fNone ||
+			(flag == fCarry && flags.Carry) ||
+			(flag == fZero && flags.Zero) ||
+			(flag == fNotCarry && !flags.Carry) ||
+			(flag == fNotZero && !flags.Zero)
+		if taken {
+			c.PC = Register(int32(c.PC) + int32(addr) - 1)
+			c.Cycles.Add(0, 4)
+		}
+		c.Cycles.Add(2, 8)
+	}
+}
+
 func getreg8(c *CPU, id RegID) uint8 {
 	switch id {
 	case RegA:
@@ -840,6 +970,8 @@ func reg16(c *CPU, id RegID) *Register {
 		return &c.HL
 	case RegSP:
 		return &c.SP
+	case RegPC:
+		return &c.PC
 	}
 	panic("invalid RegID provided to reg16")
 }

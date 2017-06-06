@@ -69,6 +69,39 @@ func TestLoadImmediate8(t *testing.T) {
 	checkCycles(t, gb, Cycles{14, 56})
 }
 
+func TestStoreHighA(t *testing.T) {
+	gb := runCode([]byte{
+		0x3e, 0x12, // LD A, 0x12
+		0xe0, 0xc2, // LDH 0xC2, A
+		0x3e, 0xff, // LD A, 0xFF
+		0xf0, 0xc2, // LDH A, 0xC2
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegA: 0x12,
+	})
+	checkCycles(t, gb, Cycles{8, 40})
+}
+
+func TestStoreASP(t *testing.T) {
+	gb := runCode([]byte{
+		0x3e, 0x12, // LD A, 0x12
+		0xea, 0xfd, 0xff, // LD 0xfffd, A
+		0xea, 0xfc, 0xff, // LD 0xfffc, A
+		0x31, 0xfc, 0xff, // LD SP, 0xfffc
+		0xc1,             // POP BC
+		0x08, 0xfc, 0xff, // LD 0xfffc, SP
+		0x31, 0xfc, 0xff, // LD SP, 0xfffc
+		0xd1, // POP DE
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegA:  0x12,
+		RegBC: 0x1212,
+		RegDE: 0xfffe,
+		RegSP: 0xfffe,
+	})
+	checkCycles(t, gb, Cycles{19, 108})
+}
+
 func TestIncrement16(t *testing.T) {
 	gb := runCode([]byte{
 		0x03, // INC BC
@@ -81,7 +114,7 @@ func TestIncrement16(t *testing.T) {
 		RegBC: 1,
 		RegDE: 1,
 		RegHL: 1,
-		RegSP: 1,
+		RegSP: 0xffff,
 	})
 	checkCycles(t, gb, Cycles{4, 32})
 }
@@ -98,7 +131,7 @@ func TestDecrement16(t *testing.T) {
 		RegBC: 0xffff,
 		RegDE: 0xffff,
 		RegHL: 0xffff,
-		RegSP: 0xffff,
+		RegSP: 0xfffd,
 	})
 	checkCycles(t, gb, Cycles{4, 32})
 }
@@ -117,7 +150,7 @@ func TestIncrement8(t *testing.T) {
 		RegBC: 0x0101,
 		RegDE: 0x0101,
 		RegHL: 0x0101,
-		RegSP: 0x0101,
+		RegSP: 0xfffe,
 	})
 	checkCycles(t, gb, Cycles{6, 24})
 }
@@ -359,6 +392,76 @@ func TestXor(t *testing.T) {
 		RegAF: 0x0080,
 	})
 	checkCycles(t, gb, Cycles{7, 28})
+}
+
+func TestPushPop(t *testing.T) {
+	gb := runCode([]byte{
+		0x01, 0x34, 0x12, // LD BC, 0x1234
+		0xc5,             // PUSH BC
+		0x01, 0x11, 0x11, // LD BC, 0x1111
+		0xc1, // POP BC
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegBC: 0x1234,
+		RegSP: 0xfffe,
+	})
+	checkCycles(t, gb, Cycles{8, 52})
+}
+
+func TestRestart(t *testing.T) {
+	gb := runCode([]byte{
+		0x01, 0xff, 0xfe, // LD BC, 0xfeff
+		0xcf,             // RST 0x08
+		0x01, 0x34, 0x12, // LD BC, 0x1234 (dummy, should be skipped)
+		0xc5, // PUSH BC (dummy, should be skipped)
+		0xd1, // POP DE
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegBC: 0xfeff,
+		RegDE: 0x0004,
+		RegSP: 0xfffe,
+	})
+	checkCycles(t, gb, Cycles{5, 40})
+}
+
+func TestAbsoluteJump(t *testing.T) {
+	gb := runCode([]byte{
+		0x01, 0xff, 0xfe, // LD BC, 0xfeff
+		0xd2, 0x09, 0x00, // JP NC, 0x0009
+		0x01, 0x34, 0x12, // LD BC, 0x1234 (dummy, should be skipped)
+		0xca, 0xff, 0xff, // JP Z, 0xffff (should be skipped)
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegBC: 0xfeff,
+	})
+	checkCycles(t, gb, Cycles{9, 40})
+}
+
+func TestJumpHL(t *testing.T) {
+	gb := runCode([]byte{
+		0x01, 0xff, 0xfe, // LD BC, 0xfeff
+		0x21, 0x0a, 0x00, // LD HL, 0xfeff
+		0xe9,             // JP (HL)
+		0x01, 0x34, 0x12, // LD BC, 0x1234 (dummy, should be skipped)
+		0x00, // NOP
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegBC: 0xfeff,
+	})
+	checkCycles(t, gb, Cycles{8, 32})
+}
+
+func TestRelativeJump(t *testing.T) {
+	gb := runCode([]byte{
+		0x01, 0xff, 0xfe, // LD BC, 0xfeff
+		0x30, 0x04, // JR NC, 0x0009
+		0x01, 0x34, 0x12, // LD BC, 0x1234 (dummy, should be skipped)
+		0x38, 0xff, // JR Z, 0xff (should be skipped)
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegBC: 0xfeff,
+	})
+	checkCycles(t, gb, Cycles{7, 32})
 }
 
 // Test all instructions to check that they are all handled
