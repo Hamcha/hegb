@@ -10,21 +10,22 @@ import (
 func TestLoadRegister(t *testing.T) {
 	gb := runCode([]byte{
 		0x01, 0x12, 0x34, // LD BC, 0x3412
-		0x11, 0x23, 0xff, // LD DE, 0xFF23
+		0x11, 0xc3, 0xff, // LD DE, 0xFFC3
 		0x21, 0xaa, 0xbb, // LD HL, 0xBBAA
 		0x41, // LD B, C
 		0x63, // LD H, E
-		0x7a, // LD A, D
+		0x70, // LD (HL), B
+		0x7e, // LD A, (HL)
 	})
 
 	// Check values
 	checkReg(t, gb, map[RegID]uint16{
 		RegBC: 0x1212,
-		RegDE: 0xff23,
-		RegHL: 0x23aa,
-		RegA:  0xff,
+		RegDE: 0xffc3,
+		RegHL: 0xc3aa,
+		RegA:  0x12,
 	})
-	checkCycles(t, gb, Cycles{12, 48})
+	checkCycles(t, gb, Cycles{13, 60})
 }
 
 func TestLoadImmediate16(t *testing.T) {
@@ -276,33 +277,38 @@ func TestRotateAcc(t *testing.T) {
 func TestHandlerPresence(t *testing.T) {
 	handled := 0
 	unhandled := 0
+	jsrows := make([]byte, 0x200)
 	// Test standard instructions
 	for i := OpNop; i <= OpRestart38; i++ {
 		// There are some holes, skip them
 		if i == 0xfc || i == 0xfd || i == OpCBPrefix || i == 0xf4 || i == 0xeb || i == 0xec || i == 0xed || i == 0xe3 || i == 0xe4 || i == 0xdd || i == 0xdb || i == 0xd3 {
+			jsrows[i-OpNop] = '-'
 			continue
 		}
 		if _, ok := cpuhandlers[i]; ok {
-			fmt.Fprintf(os.Stderr, "%02X | %s - OK\n", uint16(i), i)
 			handled++
-		} else {
-			fmt.Fprintf(os.Stderr, "%02X | %s - MISSING!\n", uint16(i), i)
-			unhandled++
+			jsrows[i-OpNop] = '1'
+			continue
 		}
+		fmt.Fprintf(os.Stderr, "%02X | %s is MISSING!\n", uint16(i), i)
+		unhandled++
+		jsrows[i-OpNop] = '0'
 	}
 
 	// CB prefix instructions
 	for i := OpCbRotateRegBLeftRot; i <= OpCbSetDirectA7; i++ {
 		if _, ok := cpuhandlers[i]; ok {
-			fmt.Fprintf(os.Stderr, "CB %02X | %s - OK\n", uint16(i-OpCbRotateRegBLeftRot), i)
 			handled++
-		} else {
-			fmt.Fprintf(os.Stderr, "CB %02X | %s - MISSING!\n", uint16(i-OpCbRotateRegBLeftRot), i)
-			unhandled++
+			jsrows[0x100+i-OpCbRotateRegBLeftRot] = '1'
+			continue
 		}
+		fmt.Fprintf(os.Stderr, "CB %02X | %s is MISSING!\n", uint16(i-OpCbRotateRegBLeftRot), i)
+		unhandled++
+		jsrows[0x100+i-OpCbRotateRegBLeftRot] = '0'
 	}
 
 	fmt.Fprintf(os.Stderr, "Summary: %d handled, %d missing (%.2f%% total)\n", handled, unhandled, (float32(handled) / float32(handled+unhandled) * 100))
+	fmt.Fprintf(os.Stderr, "JS table code: %s\n", jsrows)
 	if unhandled > 0 {
 		t.Fail()
 	}

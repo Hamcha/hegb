@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+<title>Current progress</title>
+<style>
+body {
+	font-family: monospace;
+	padding: 10px;
+}
+h1 {
+	margin: 5px;
+}
+td {
+	border: 1px solid #fff;
+	padding: 3px 5px;
+}
+th {
+	padding: 3px;
+}
+table {
+	border-collapse: collapse;
+	margin: 5px;
+	display: inline-block;
+}
+tbody {
+	border: 1px solid grey;
+}
+.check {
+	background-color: #18a018;
+	color: white;
+}
+.ignored {
+	background-color: grey;
+	color: grey;
+	border: 0;
+}
+</style>
+</head>
+<body>
+<div id="root">
+	<h1>HEGB current progress</h1>
+	<table>
+		<thead>
+			<tr><th colspan="16">Standard instructions</th></tr>
+		</thead>
+		<tbody id="standard"></tbody>
+	</table>
+	<table>
+		<thead>
+		<tr><th colspan="16">CB prefix</th></tr>
+		</thead>
+		<tbody id="cb"></tbody>
+	</table>
+</div>
+<script>
+const data = "11011111000111111101111100011111010111100001111001011110000111101111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000-0000000-0000000-0-00000--000000---000001-0000001--001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
+const stt = document.getElementById("standard");
+const scb = document.getElementById("cb");
+const padhex = (x) => ("0" + x.toString(16)).slice(-2);
+let row = null;
+for (let i = 0; i < data.length; i++) {
+	if (i % 0x10 == 0) {
+		row = i < 0x100 ? stt.insertRow(-1) : scb.insertRow(-1);
+	}
+	let cell = row.insertCell(i % 0x10);
+	cell.className = data[i] == '1' ? "check" : data[i] == '-' ? "ignored" : "";
+	cell.appendChild(document.createTextNode(padhex(i)));
+}
+</script>
+</body>
+</html>

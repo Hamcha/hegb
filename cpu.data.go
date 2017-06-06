@@ -1549,6 +1549,7 @@ const (
 	RegE
 	RegH
 	RegL
+	RegHLInd
 )
 
 func (r RegID) String() string {
@@ -1579,6 +1580,8 @@ func (r RegID) String() string {
 		return "H"
 	case RegL:
 		return "L"
+	case RegHLInd:
+		return "(HL)"
 	}
 	panic("unknown RegID")
 }
