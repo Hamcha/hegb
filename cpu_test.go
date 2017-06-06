@@ -273,6 +273,55 @@ func TestRotateAcc(t *testing.T) {
 	checkCycles(t, gb, Cycles{3, 12})
 }
 
+func TestInvertA(t *testing.T) {
+	gb := runCode([]byte{
+		0x3e, 0xf0, // LD A, 0xF0
+		0x2f, // CPL
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegA: 0x0f,
+	})
+	checkCycles(t, gb, Cycles{3, 12})
+}
+
+func TestSetInvertCarry(t *testing.T) {
+	gb := runCode([]byte{
+		0x3e, 0x80, // LD A, 0x80
+		0x37, // SCF
+		0x17, // RLA (A should be 1, CF should be 1)
+		0x3f, // CCF
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegAF: 0x0100,
+	})
+	checkCycles(t, gb, Cycles{5, 20})
+}
+
+func TestLoadRegister16(t *testing.T) {
+	gb := runCode([]byte{
+		0x21, 0x34, 0x12, // LD HL, 0x1234
+		0xf9, // LD SP, HL
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegSP: 0x1234,
+	})
+	checkCycles(t, gb, Cycles{4, 20})
+}
+
+func TestLoadHighMemC(t *testing.T) {
+	gb := runCode([]byte{
+		0x0e, 0x81, // LD C, 0x81
+		0x3e, 0x10, // LD A, 0x10
+		0xe2,       // LD (C), A
+		0x3e, 0xff, // LD A, 0xff
+		0xf2, // LD A, (C)
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegA: 0x10,
+	})
+	checkCycles(t, gb, Cycles{10, 40})
+}
+
 // Test all instructions to check that they are all handled
 func TestHandlerPresence(t *testing.T) {
 	handled := 0

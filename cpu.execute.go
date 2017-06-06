@@ -88,6 +88,13 @@ var cpuhandlers = map[instruction]Handler{
 	OpLoadIndirectHLE:         loadRegister(RegHLInd, RegE),
 	OpLoadIndirectHLH:         loadRegister(RegHLInd, RegH),
 	OpLoadIndirectHLL:         loadRegister(RegHLInd, RegL),
+	OpLoadIndirectBCA:         loadRegister(RegBCInd, RegA),
+	OpLoadIndirectDEA:         loadRegister(RegDEInd, RegA),
+	OpLoadIndirectABC:         loadRegister(RegA, RegBCInd),
+	OpLoadIndirectADE:         loadRegister(RegA, RegDEInd),
+	OpLoadHighMemCA:           loadRegister(RegCInd, RegA),
+	OpLoadHighRegAC:           loadRegister(RegA, RegCInd),
+	OpLoadDirectSPHL:          loadRegister16(RegSP, RegHL),
 	OpIncrementBC:             increment16(RegBC),
 	OpIncrementDE:             increment16(RegDE),
 	OpIncrementHL:             increment16(RegHL),
@@ -114,6 +121,9 @@ var cpuhandlers = map[instruction]Handler{
 	OpDecrementIndirectHL:     decrement8(RegHLInd),
 	OpStop:                    halt,
 	OpHalt:                    halt,
+	OpInvertA:                 invertA,
+	OpSetCarry:                setCarry(false),
+	OpFlipCarry:               setCarry(true),
 	OpCbBitDirectA0:           bit(RegA, 0),
 	OpCbBitDirectA1:           bit(RegA, 1),
 	OpCbBitDirectA2:           bit(RegA, 2),
@@ -402,6 +412,15 @@ func loadRegister(regtgt, regsrc RegID) Handler {
 	}
 }
 
+func loadRegister16(regtgt, regsrc RegID) Handler {
+	return func(c *CPU) {
+		checkind(c, regtgt)
+		checkind(c, regsrc)
+		*reg16(c, regtgt) = *reg16(c, regsrc)
+		c.Cycles.Add(1, 8)
+	}
+}
+
 func increment16(regid RegID) Handler {
 	return func(c *CPU) {
 		checkind(c, regid)
@@ -461,6 +480,30 @@ func halt(c *CPU) {
 func setInterrupt(val bool) Handler {
 	return func(c *CPU) {
 		c.InterruptEnable = val
+		c.Cycles.Add(1, 4)
+	}
+}
+
+func invertA(c *CPU) {
+	c.AF.SetLeft(^c.AF.Left())
+	flags := c.Flags()
+	flags.AddSub = true
+	flags.HalfCarry = true
+	c.SetFlags(flags)
+	c.Cycles.Add(1, 4)
+}
+
+func setCarry(invert bool) Handler {
+	return func(c *CPU) {
+		flags := c.Flags()
+		flags.AddSub = false
+		flags.HalfCarry = false
+		if invert {
+			flags.Carry = !flags.Carry
+		} else {
+			flags.Carry = true
+		}
+		c.SetFlags(flags)
 		c.Cycles.Add(1, 4)
 	}
 }
@@ -631,8 +674,14 @@ func getreg8(c *CPU, id RegID) uint8 {
 		return c.HL.Left()
 	case RegL:
 		return c.HL.Right()
+	case RegBCInd:
+		return c.MMU.Read(uint16(c.BC))
+	case RegDEInd:
+		return c.MMU.Read(uint16(c.DE))
 	case RegHLInd:
 		return c.MMU.Read(uint16(c.HL))
+	case RegCInd:
+		return c.MMU.Read(0xff00 + uint16(c.BC.Right()))
 	}
 	panic("invalid RegID provided to getreg8")
 }
@@ -655,8 +704,14 @@ func setreg8(c *CPU, id RegID, val uint8) {
 		c.HL.SetLeft(val)
 	case RegL:
 		c.HL.SetRight(val)
+	case RegBCInd:
+		c.MMU.Write(uint16(c.BC), val)
+	case RegDEInd:
+		c.MMU.Write(uint16(c.DE), val)
 	case RegHLInd:
 		c.MMU.Write(uint16(c.HL), val)
+	case RegCInd:
+		c.MMU.Write(0xff00+uint16(c.BC.Right()), val)
 	default:
 		panic("invalid RegID provided to setreg8")
 	}
@@ -694,7 +749,10 @@ func nextu8(c *CPU) uint8 {
 
 // Add extra cycles if using the indirect register (for memory fetching)
 func checkind(c *CPU, regid RegID) {
-	if regid == RegHLInd {
+	switch regid {
+	case RegHLInd, RegBCInd, RegDEInd:
 		c.Cycles.Add(0, 4)
+	case RegCInd:
+		c.Cycles.Add(1, 4)
 	}
 }

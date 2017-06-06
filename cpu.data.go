@@ -60,7 +60,7 @@ const (
 	OpIncrementIndirectHL                         // 34 INC (HL)
 	OpDecrementIndirectHL                         // 35 DEC (HL)
 	OpLoadImmediateIndirectHL                     // 36 LD  (HL),d8
-	OpResetCarry                                  // 37 SCF
+	OpSetCarry                                    // 37 SCF
 	OpJumpRelativeCA                              // 38 JR  C,r8
 	OpAddDirectHLSP                               // 39 ADD HL,SP
 	OpLoadIndirectAHLDecrement                    // 3a LDD A,(HL)
@@ -68,7 +68,7 @@ const (
 	OpIncrementA                                  // 3c INC A
 	OpDecrementA                                  // 3d DEC A
 	OpLoadImmediateA                              // 3e LD  A,d8
-	OpSetCarry                                    // 3f CCF
+	OpFlipCarry                                   // 3f CCF
 	OpLoadDirectBB                                // 40 LD B,B
 	OpLoadDirectBC                                // 41 LD B,C
 	OpLoadDirectBD                                // 42 LD B,D
@@ -635,7 +635,7 @@ func (i instruction) String() string {
 		return "DEC (HL)"
 	case OpLoadImmediateIndirectHL:
 		return "LD  (HL),d8"
-	case OpResetCarry:
+	case OpSetCarry:
 		return "SCF"
 	case OpJumpRelativeCA:
 		return "JR  C,r8"
@@ -651,7 +651,7 @@ func (i instruction) String() string {
 		return "DEC A"
 	case OpLoadImmediateA:
 		return "LD  A,d8"
-	case OpSetCarry:
+	case OpFlipCarry:
 		return "CCF"
 	case OpLoadDirectBB:
 		return "LD B,B"
@@ -1549,7 +1549,10 @@ const (
 	RegE
 	RegH
 	RegL
+	RegBCInd
+	RegDEInd
 	RegHLInd
+	RegCInd
 )
 
 func (r RegID) String() string {
@@ -1580,8 +1583,14 @@ func (r RegID) String() string {
 		return "H"
 	case RegL:
 		return "L"
+	case RegBCInd:
+		return "(BC)"
+	case RegDEInd:
+		return "(DE)"
 	case RegHLInd:
 		return "(HL)"
+	case RegCInd:
+		return "(C)"
 	}
 	panic("unknown RegID")
 }
