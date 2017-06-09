@@ -99,6 +99,7 @@ var cpuhandlers = map[instruction]Handler{
 	OpLoadDirectSPHL:          loadRegister16(RegSP, RegHL),
 	OpStoreMemSP:              storeSP,
 	OpStoreMemA:               storeA,
+	OpLoadMemA:                loadA,
 	OpIncrementBC:             increment16(RegBC),
 	OpIncrementDE:             increment16(RegDE),
 	OpIncrementHL:             increment16(RegHL),
@@ -182,6 +183,42 @@ var cpuhandlers = map[instruction]Handler{
 	OpJumpRelativeNC:          jumpr8(fNotCarry),
 	OpJumpRelativeZE:          jumpr8(fZero),
 	OpJumpRelativeNZ:          jumpr8(fNotZero),
+	OpAddDirectAANoCarry:      add8(RegA, RegA, false),
+	OpAddDirectABNoCarry:      add8(RegA, RegB, false),
+	OpAddDirectACNoCarry:      add8(RegA, RegC, false),
+	OpAddDirectADNoCarry:      add8(RegA, RegD, false),
+	OpAddDirectAENoCarry:      add8(RegA, RegE, false),
+	OpAddDirectAHNoCarry:      add8(RegA, RegH, false),
+	OpAddDirectALNoCarry:      add8(RegA, RegL, false),
+	OpAddIndirectAHLNoCarry:   add8(RegA, RegHLInd, false),
+	OpAddDirectAACarry:        add8(RegA, RegA, true),
+	OpAddDirectABCarry:        add8(RegA, RegB, true),
+	OpAddDirectACCarry:        add8(RegA, RegC, true),
+	OpAddDirectADCarry:        add8(RegA, RegD, true),
+	OpAddDirectAECarry:        add8(RegA, RegE, true),
+	OpAddDirectAHCarry:        add8(RegA, RegH, true),
+	OpAddDirectALCarry:        add8(RegA, RegL, true),
+	OpAddIndirectAHLCarry:     add8(RegA, RegHLInd, true),
+	OpSubDirectAANoCarry:      sub8(RegA, RegA, false),
+	OpSubDirectABNoCarry:      sub8(RegA, RegB, false),
+	OpSubDirectACNoCarry:      sub8(RegA, RegC, false),
+	OpSubDirectADNoCarry:      sub8(RegA, RegD, false),
+	OpSubDirectAENoCarry:      sub8(RegA, RegE, false),
+	OpSubDirectAHNoCarry:      sub8(RegA, RegH, false),
+	OpSubDirectALNoCarry:      sub8(RegA, RegL, false),
+	OpSubIndirectAHLNoCarry:   sub8(RegA, RegHLInd, false),
+	OpSubDirectAACarry:        sub8(RegA, RegA, true),
+	OpSubDirectABCarry:        sub8(RegA, RegB, true),
+	OpSubDirectACCarry:        sub8(RegA, RegC, true),
+	OpSubDirectADCarry:        sub8(RegA, RegD, true),
+	OpSubDirectAECarry:        sub8(RegA, RegE, true),
+	OpSubDirectAHCarry:        sub8(RegA, RegH, true),
+	OpSubDirectALCarry:        sub8(RegA, RegL, true),
+	OpSubIndirectAHLCarry:     sub8(RegA, RegHLInd, true),
+	OpAddDirectHLBC:           add16HL(RegBC),
+	OpAddDirectHLDE:           add16HL(RegDE),
+	OpAddDirectHLHL:           add16HL(RegHL),
+	OpAddDirectHLSP:           add16HL(RegSP),
 	OpCbBitDirectA0:           bit(RegA, 0),
 	OpCbBitDirectA1:           bit(RegA, 1),
 	OpCbBitDirectA2:           bit(RegA, 2),
@@ -495,6 +532,12 @@ func storeA(c *CPU) {
 	c.Cycles.Add(3, 16)
 }
 
+func loadA(c *CPU) {
+	addr := nextu16(c)
+	c.AF.SetLeft(c.MMU.Read(addr))
+	c.Cycles.Add(3, 16)
+}
+
 func storeSP(c *CPU) {
 	addr := nextu16(c)
 	c.MMU.Write(addr, c.SP.Right())
@@ -592,6 +635,66 @@ func setCarry(invert bool) Handler {
 			flags.Carry = true
 		}
 		c.SetFlags(flags)
+		c.Cycles.Add(1, 4)
+	}
+}
+
+func add8(regop1 RegID, regop2 RegID, useCarry bool) Handler {
+	return func(c *CPU) {
+		checkind(c, regop2)
+		oldval := getreg8(c, regop1)
+		added := getreg8(c, regop2)
+		carry := uint8(0)
+		if useCarry && c.Flags().Carry {
+			carry = 1
+		}
+		newval := oldval + added + carry
+
+		setreg8(c, regop1, newval)
+		c.SetFlags(Flags{
+			Carry:     oldval > newval,
+			Zero:      newval == 0,
+			AddSub:    false,
+			HalfCarry: (oldval&0xf)+((added+carry)&0xf) >= 0x10,
+		})
+		c.Cycles.Add(1, 4)
+	}
+}
+
+func add16HL(regop2 RegID) Handler {
+	return func(c *CPU) {
+		current := c.HL
+		added := *reg16(c, regop2)
+		newval := current + added
+		c.SetFlags(Flags{
+			Zero:      c.Flags().Zero,
+			Carry:     newval < current,
+			AddSub:    false,
+			HalfCarry: ((current>>8)&0xf)+((added>>8)&0xf) >= 0x10,
+		})
+		c.HL = newval
+		c.Cycles.Add(1, 8)
+	}
+}
+
+func sub8(regop1 RegID, regop2 RegID, useCarry bool) Handler {
+	return func(c *CPU) {
+		checkind(c, regop2)
+		oldval := getreg8(c, regop1)
+		subbed := getreg8(c, regop2)
+		carry := uint8(0)
+		if useCarry && c.Flags().Carry {
+			carry = 1
+		}
+		newval := oldval - subbed - carry
+
+		setreg8(c, regop1, newval)
+		c.SetFlags(Flags{
+			Carry:     oldval < newval,
+			Zero:      newval == 0,
+			AddSub:    true,
+			HalfCarry: (newval & 0xf) > (oldval & 0xf),
+		})
 		c.Cycles.Add(1, 4)
 	}
 }

@@ -148,7 +148,7 @@ const (
 	OpAddDirectAHCarry                            // 8c ADC A,H
 	OpAddDirectALCarry                            // 8d ADC A,L
 	OpAddIndirectAHLCarry                         // 8e ADC A,(HL)
-	OpAddDirectAAtrue                             // 8f ADC A,A
+	OpAddDirectAACarry                            // 8f ADC A,A
 	OpSubDirectABNoCarry                          // 90 SUB A,B
 	OpSubDirectACNoCarry                          // 91 SUB A,C
 	OpSubDirectADNoCarry                          // 92 SUB A,D
@@ -811,7 +811,7 @@ func (i instruction) String() string {
 		return "ADC A,L"
 	case OpAddIndirectAHLCarry:
 		return "ADC A,(HL)"
-	case OpAddDirectAAtrue:
+	case OpAddDirectAACarry:
 		return "ADC A,A"
 	case OpSubDirectABNoCarry:
 		return "SUB A,B"

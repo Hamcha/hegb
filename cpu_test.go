@@ -464,6 +464,49 @@ func TestRelativeJump(t *testing.T) {
 	checkCycles(t, gb, Cycles{7, 32})
 }
 
+func TestAdd8(t *testing.T) {
+	gb := runCode([]byte{
+		0x3e, 0xfa, // LD A, 0xfa
+		0x01, 0x0f, 0x0f, // LD BC, 0x0f0f
+		0x80, // ADD A, B
+		0x6f, // LD L, A
+		0x89, // ADC A, C
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegAF: 0x1900,
+		RegL:  0x09,
+	})
+	checkCycles(t, gb, Cycles{8, 32})
+}
+
+func TestSub8(t *testing.T) {
+	gb := runCode([]byte{
+		0x3e, 0xfa, // LD A, 0xfa
+		0x01, 0x0f, 0x0f, // LD BC, 0x0f0f
+		0x90, // SUB A, B
+		0x6f, // LD L, A
+		0x99, // SBC A, C
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegAF: 0xdc60,
+		RegL:  0xeb,
+	})
+	checkCycles(t, gb, Cycles{8, 32})
+}
+
+func TestAddHL(t *testing.T) {
+	gb := runCode([]byte{
+		0x21, 0xfa, 0xff, // LD HL, 0xfffa
+		0x01, 0x0f, 0x00, // LD BC, 0x000f
+		0x09, // ADD HL, BC
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegAF: 0x0010,
+		RegHL: 0x0009,
+	})
+	checkCycles(t, gb, Cycles{7, 32})
+}
+
 // Test all instructions to check that they are all handled
 func TestHandlerPresence(t *testing.T) {
 	handled := 0
