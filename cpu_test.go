@@ -507,6 +507,62 @@ func TestAddHL(t *testing.T) {
 	checkCycles(t, gb, Cycles{7, 32})
 }
 
+//TODO Test loop using LDD/LDI
+
+func TestSubroutine(t *testing.T) {
+	gb := runCode([]byte{
+		0xcd, 0x05, 0x00, // CALL 0x0005
+		0x18, 0x05, // JR 0x05
+		// [SUBROUTINE START]
+		0x06, 0xfa, // LD B, 0xfa
+		0xc9, // RET
+		// [SUBROUTINE END]
+		0x04, // INC B (should be skipped unless RET is not executed)
+		0x04, // INC B
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegB: 0xfb,
+	})
+	checkCycles(t, gb, Cycles{9, 68})
+}
+
+func TestCmp(t *testing.T) {
+	gb := runCode([]byte{
+		0x3e, 0x05, // LD A, 0xfa
+		0xfe, 0x06, // CP 0xff
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegAF: 0x0570,
+	})
+	checkCycles(t, gb, Cycles{4, 16})
+}
+
+func TestSigned(t *testing.T) {
+	gb := runCode([]byte{
+		0xe8, 0xf0, // ADD SP, -16
+		0xf8, 0x10, // LD HL, SP+16
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegSP: 0xffee,
+		RegHL: 0xfffe,
+	})
+	checkCycles(t, gb, Cycles{4, 28})
+}
+
+func TestBCD(t *testing.T) {
+	gb := runCode([]byte{
+		0x3e, 0x09, // LD A, 0x09
+		0xc6, 0x11, // ADD A, 0x11
+		0x47, // LD B, A
+		0x27, // DAA
+	})
+	checkReg(t, gb, map[RegID]uint16{
+		RegAF: 0x2000,
+		RegB:  0x1a,
+	})
+	checkCycles(t, gb, Cycles{6, 24})
+}
+
 // Test all instructions to check that they are all handled
 func TestHandlerPresence(t *testing.T) {
 	handled := 0
