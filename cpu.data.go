@@ -1528,7 +1528,7 @@ func (i instruction) String() string {
 	case OpCbSetDirectA7:
 		return "SET 7,A"
 	}
-	panic("invalid opcode")
+	return "<invalid opcode>"
 }
 
 // RegID identifies a register
@@ -1595,5 +1595,5 @@ func (r RegID) String() string {
 	case RegCInd:
 		return "(C)"
 	}
-	panic("unknown RegID")
+	return "<unknown RegID>"
 }
