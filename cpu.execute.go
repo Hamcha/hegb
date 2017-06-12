@@ -4,14 +4,14 @@ import (
 	"encoding/binary"
 )
 
-// Handler handles exactly one instruction
-type Handler func(c *CPU)
+// InstructionHandler handles exactly one instruction
+type InstructionHandler func(c *CPU)
 
 func noop(c *CPU) {
 	c.Cycles.Add(1, 4)
 }
 
-var cpuhandlers = map[instruction]Handler{
+var cpuhandlers = map[instruction]InstructionHandler{
 	OpNop:                      noop,
 	OpLoadImmediateBC:          loadImmediate16(RegBC),
 	OpLoadImmediateDE:          loadImmediate16(RegDE),
@@ -514,7 +514,7 @@ var cpuhandlers = map[instruction]Handler{
 	OpCbRotateIndHLRightRep:    rotateReg(RegHLInd, rRight, rRepeat, rCB),
 }
 
-func loadImmediate8(regid RegID) Handler {
+func loadImmediate8(regid RegID) InstructionHandler {
 	return func(c *CPU) {
 		checkind(c, regid)
 		setreg8(c, regid, nextu8(c))
@@ -522,14 +522,14 @@ func loadImmediate8(regid RegID) Handler {
 	}
 }
 
-func loadImmediate16(regid RegID) Handler {
+func loadImmediate16(regid RegID) InstructionHandler {
 	return func(c *CPU) {
 		*reg16(c, regid) = Register(nextu16(c))
 		c.Cycles.Add(3, 12)
 	}
 }
 
-func loadRegister(regtgt, regsrc RegID) Handler {
+func loadRegister(regtgt, regsrc RegID) InstructionHandler {
 	return func(c *CPU) {
 		checkind(c, regtgt)
 		checkind(c, regsrc)
@@ -538,7 +538,7 @@ func loadRegister(regtgt, regsrc RegID) Handler {
 	}
 }
 
-func loadRegister16(regtgt, regsrc RegID) Handler {
+func loadRegister16(regtgt, regsrc RegID) InstructionHandler {
 	return func(c *CPU) {
 		checkind(c, regtgt)
 		checkind(c, regsrc)
@@ -612,7 +612,7 @@ func loadHLStackOffset(c *CPU) {
 	c.Cycles.Add(2, 12)
 }
 
-func increment16(regid RegID) Handler {
+func increment16(regid RegID) InstructionHandler {
 	return func(c *CPU) {
 		checkind(c, regid)
 		*reg16(c, regid)++
@@ -620,14 +620,14 @@ func increment16(regid RegID) Handler {
 	}
 }
 
-func decrement16(regid RegID) Handler {
+func decrement16(regid RegID) InstructionHandler {
 	return func(c *CPU) {
 		*reg16(c, regid)--
 		c.Cycles.Add(1, 8)
 	}
 }
 
-func increment8(regid RegID) Handler {
+func increment8(regid RegID) InstructionHandler {
 	return func(c *CPU) {
 		checkind(c, regid)
 		val := getreg8(c, regid)
@@ -644,7 +644,7 @@ func increment8(regid RegID) Handler {
 	}
 }
 
-func decrement8(regid RegID) Handler {
+func decrement8(regid RegID) InstructionHandler {
 	return func(c *CPU) {
 		checkind(c, regid)
 		val := getreg8(c, regid)
@@ -668,14 +668,14 @@ func halt(c *CPU) {
 	}
 }
 
-func restart(offset uint8) Handler {
+func restart(offset uint8) InstructionHandler {
 	return func(c *CPU) {
 		push16(RegPC)(c)
 		c.PC = Register(offset)
 	}
 }
 
-func setInterrupt(val bool) Handler {
+func setInterrupt(val bool) InstructionHandler {
 	return func(c *CPU) {
 		c.InterruptEnable = val
 		c.Cycles.Add(1, 4)
@@ -691,7 +691,7 @@ func invertA(c *CPU) {
 	c.Cycles.Add(1, 4)
 }
 
-func setCarry(invert bool) Handler {
+func setCarry(invert bool) InstructionHandler {
 	return func(c *CPU) {
 		flags := c.Flags()
 		flags.AddSub = false
@@ -723,7 +723,7 @@ func _add(c *CPU, added uint8, useCarry bool) {
 	})
 }
 
-func add8(regop RegID, useCarry bool) Handler {
+func add8(regop RegID, useCarry bool) InstructionHandler {
 	return func(c *CPU) {
 		checkind(c, regop)
 		_add(c, getreg8(c, regop), useCarry)
@@ -731,14 +731,14 @@ func add8(regop RegID, useCarry bool) Handler {
 	}
 }
 
-func addi(useCarry bool) Handler {
+func addi(useCarry bool) InstructionHandler {
 	return func(c *CPU) {
 		_add(c, nextu8(c), useCarry)
 		c.Cycles.Add(2, 8)
 	}
 }
 
-func add16HL(regop RegID) Handler {
+func add16HL(regop RegID) InstructionHandler {
 	return func(c *CPU) {
 		current := c.HL
 		added := *reg16(c, regop)
@@ -771,7 +771,7 @@ func _sub(c *CPU, subbed uint8, useCarry bool) {
 	})
 }
 
-func sub8(regop RegID, useCarry bool) Handler {
+func sub8(regop RegID, useCarry bool) InstructionHandler {
 	return func(c *CPU) {
 		checkind(c, regop)
 		_sub(c, getreg8(c, regop), useCarry)
@@ -779,14 +779,14 @@ func sub8(regop RegID, useCarry bool) Handler {
 	}
 }
 
-func subi(useCarry bool) Handler {
+func subi(useCarry bool) InstructionHandler {
 	return func(c *CPU) {
 		_sub(c, nextu8(c), useCarry)
 		c.Cycles.Add(2, 8)
 	}
 }
 
-func xorReg(regid RegID) Handler {
+func xorReg(regid RegID) InstructionHandler {
 	return func(c *CPU) {
 		val := c.AF.Left() ^ getreg8(c, regid)
 		c.AF.SetLeft(val)
@@ -814,7 +814,7 @@ func xorImmediate(c *CPU) {
 	c.Cycles.Add(2, 8)
 }
 
-func andReg(regid RegID) Handler {
+func andReg(regid RegID) InstructionHandler {
 	return func(c *CPU) {
 		val := c.AF.Left() & getreg8(c, regid)
 		c.AF.SetLeft(val)
@@ -842,7 +842,7 @@ func andImmediate(c *CPU) {
 	c.Cycles.Add(2, 8)
 }
 
-func orReg(regid RegID) Handler {
+func orReg(regid RegID) InstructionHandler {
 	return func(c *CPU) {
 		val := c.AF.Left() | getreg8(c, regid)
 		c.AF.SetLeft(val)
@@ -881,7 +881,7 @@ func _cmp(c *CPU, val uint8) {
 	})
 }
 
-func cmpReg(regop RegID) Handler {
+func cmpReg(regop RegID) InstructionHandler {
 	return func(c *CPU) {
 		checkind(c, regop)
 		_cmp(c, getreg8(c, regop))
@@ -894,7 +894,7 @@ func cmpi(c *CPU) {
 	c.Cycles.Add(2, 8)
 }
 
-func bit(regid RegID, bitNum uint8) Handler {
+func bit(regid RegID, bitNum uint8) InstructionHandler {
 	return func(c *CPU) {
 		checkind(c, regid)
 		val := (getreg8(c, regid) >> bitNum) & 0x1
@@ -908,7 +908,7 @@ func bit(regid RegID, bitNum uint8) Handler {
 	}
 }
 
-func bset(regid RegID, bitNum uint8) Handler {
+func bset(regid RegID, bitNum uint8) InstructionHandler {
 	return func(c *CPU) {
 		checkind(c, regid)
 		val := getreg8(c, regid)
@@ -918,7 +918,7 @@ func bset(regid RegID, bitNum uint8) Handler {
 	}
 }
 
-func breset(regid RegID, bitNum uint8) Handler {
+func breset(regid RegID, bitNum uint8) InstructionHandler {
 	return func(c *CPU) {
 		checkind(c, regid)
 		val := getreg8(c, regid)
@@ -928,7 +928,7 @@ func breset(regid RegID, bitNum uint8) Handler {
 	}
 }
 
-func bswap(regid RegID) Handler {
+func bswap(regid RegID) InstructionHandler {
 	return func(c *CPU) {
 		checkind(c, regid)
 		val := getreg8(c, regid)
@@ -969,7 +969,7 @@ const (
 	rCB
 )
 
-func rotateReg(regid RegID, dir rDir, rop rOp, typ rOpcodeType) Handler {
+func rotateReg(regid RegID, dir rDir, rop rOp, typ rOpcodeType) InstructionHandler {
 	return func(c *CPU) {
 		checkind(c, regid)
 		val := getreg8(c, regid)
@@ -1052,7 +1052,7 @@ const (
 	fNotZero
 )
 
-func jumpa16(flag flagID) Handler {
+func jumpa16(flag flagID) InstructionHandler {
 	return func(c *CPU) {
 		flags := c.Flags()
 		addr := nextu16(c)
@@ -1074,7 +1074,7 @@ func jumpHL(c *CPU) {
 	c.Cycles.Add(1, 4)
 }
 
-func jumpr8(flag flagID) Handler {
+func jumpr8(flag flagID) InstructionHandler {
 	return func(c *CPU) {
 		flags := c.Flags()
 		addr := nextu8(c)
@@ -1103,7 +1103,7 @@ func _pop16(c *CPU, reg *Register) {
 	c.SP += 2
 }
 
-func push16(regid RegID) Handler {
+func push16(regid RegID) InstructionHandler {
 	return func(c *CPU) {
 		val := *reg16(c, regid)
 		_push16(c, val)
@@ -1111,7 +1111,7 @@ func push16(regid RegID) Handler {
 	}
 }
 
-func pop16(regid RegID) Handler {
+func pop16(regid RegID) InstructionHandler {
 	return func(c *CPU) {
 		val := reg16(c, regid)
 		_pop16(c, val)
@@ -1119,7 +1119,7 @@ func pop16(regid RegID) Handler {
 	}
 }
 
-func call(flag flagID) Handler {
+func call(flag flagID) InstructionHandler {
 	return func(c *CPU) {
 		flags := c.Flags()
 		addr := nextu16(c)
@@ -1137,7 +1137,7 @@ func call(flag flagID) Handler {
 	}
 }
 
-func ret(flag flagID) Handler {
+func ret(flag flagID) InstructionHandler {
 	return func(c *CPU) {
 		flags := c.Flags()
 		taken := flag == fNone ||

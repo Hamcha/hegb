@@ -29,6 +29,7 @@ func MakeGB(romdata *ROM, options EmulatorOptions) *Gameboy {
 		MMU:  mmu,
 		Test: options.Test,
 	}
+	mmu.cpu = cpu
 
 	// If bootstrap is skipped, skip to entrypoint
 	if options.SkipBootstrap {

@@ -3,6 +3,12 @@ package hegb
 // MMU IO Register
 type ioregister uint16
 
+// IOReadHandler handles read access to a single IO register
+type IOReadHandler func(m *MMU) uint8
+
+// IOWriteHandler handles write access to a single IO register
+type IOWriteHandler func(m *MMU, val uint8)
+
 // All MMU IO registers
 const (
 	MIOJoypad             ioregister = 0xff + iota // ff00 Joypad port
@@ -225,3 +231,7 @@ func (r ioregister) String() string {
 	}
 	return "<invalid IO register>"
 }
+
+var ioreadhandlers = map[ioregister]IOReadHandler{}
+
+var iowritehandlers = map[ioregister]IOWriteHandler{}

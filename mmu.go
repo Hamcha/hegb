@@ -41,6 +41,7 @@ type MMU struct {
 
 	ZRAM ZRAM
 
+	cpu *CPU
 	rom *ROM
 	gpu *GPU
 }
