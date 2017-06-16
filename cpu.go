@@ -183,8 +183,8 @@ func (c *CPU) Dump() {
 }
 
 func (c *CPU) printInstruction(i instruction) string {
-	const REGPOS = 20
-	const FLAGPOS = 60
+	const REGPOS = 26
+	const FLAGPOS = 66
 	str := i.String()
 	// Replace parameters with their actual values
 	if strings.Index(str, "d8") > 0 {
