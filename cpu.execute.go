@@ -1077,7 +1077,7 @@ func jumpHL(c *CPU) {
 func jumpr8(flag flagID) InstructionHandler {
 	return func(c *CPU) {
 		flags := c.Flags()
-		addr := nextu8(c)
+		addr := int8(nextu8(c))
 		taken := flag == fNone ||
 			(flag == fCarry && flags.Carry) ||
 			(flag == fZero && flags.Zero) ||

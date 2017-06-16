@@ -730,7 +730,7 @@ func (i instruction) String() string {
 	case OpLoadDirectHL:
 		return "LD H,L"
 	case OpLoadIndirectHHL:
-		return "LD H,(HL"
+		return "LD H,(HL)"
 	case OpLoadDirectHA:
 		return "LD H,A"
 	case OpLoadDirectLB:
@@ -1531,6 +1531,569 @@ func (i instruction) String() string {
 	return "<invalid opcode>"
 }
 
+func (i instruction) Registers() []RegID {
+	switch i {
+	case
+		OpRotateAccLeftRotate,
+		OpRotateAccRightRotate,
+		OpRotateAccLeftThrough,
+		OpRotateAccRightThrough,
+		OpDecimalToBCD,
+		OpInvertA,
+		OpIncrementA,
+		OpDecrementA,
+		OpLoadImmediateA,
+		OpAddImmediateANoCarry,
+		OpSubImmediateANoCarry,
+		OpAddImmediateACarry,
+		OpSubImmediateACarry,
+		OpLoadHighAbsA,
+		OpAndImmediateA,
+		OpStoreMemA,
+		OpXorImmediateA,
+		OpLoadHighRegA,
+		OpOrImmediateA,
+		OpLoadMemA,
+		OpLoadDirectAA,
+		OpAddDirectAANoCarry,
+		OpAddDirectAACarry,
+		OpSubDirectAANoCarry,
+		OpSubDirectAACarry,
+		OpAndDirectAA,
+		OpXorDirectAA,
+		OpOrDirectAA,
+		OpCmpDirectAA,
+		OpCmpImmediateA,
+		OpCbSwapDirectA,
+		OpCbRotateRegARightShf,
+		OpCbRotateRegARightRep,
+		OpCbRotateRegALeftShf,
+		OpCbRotateRegARightThC,
+		OpCbRotateRegALeftThC,
+		OpCbRotateRegARightRot,
+		OpCbRotateRegALeftRot,
+		OpCbBitDirectA0,
+		OpCbBitDirectA1,
+		OpCbBitDirectA2,
+		OpCbBitDirectA3,
+		OpCbBitDirectA4,
+		OpCbBitDirectA5,
+		OpCbBitDirectA6,
+		OpCbBitDirectA7,
+		OpCbResetDirectA0,
+		OpCbResetDirectA1,
+		OpCbResetDirectA2,
+		OpCbResetDirectA3,
+		OpCbResetDirectA4,
+		OpCbResetDirectA5,
+		OpCbResetDirectA6,
+		OpCbResetDirectA7,
+		OpCbSetDirectA0,
+		OpCbSetDirectA1,
+		OpCbSetDirectA2,
+		OpCbSetDirectA3,
+		OpCbSetDirectA4,
+		OpCbSetDirectA5,
+		OpCbSetDirectA6,
+		OpCbSetDirectA7:
+		return []RegID{RegA}
+	case
+		OpIncrementB,
+		OpDecrementB,
+		OpLoadImmediateB,
+		OpLoadDirectBB,
+		OpCbSwapDirectB,
+		OpCbRotateRegBRightShf,
+		OpCbRotateRegBRightRep,
+		OpCbRotateRegBLeftShf,
+		OpCbRotateRegBRightThC,
+		OpCbRotateRegBLeftThC,
+		OpCbRotateRegBRightRot,
+		OpCbRotateRegBLeftRot,
+		OpCbBitDirectB0,
+		OpCbBitDirectB1,
+		OpCbBitDirectB2,
+		OpCbBitDirectB3,
+		OpCbBitDirectB4,
+		OpCbBitDirectB5,
+		OpCbBitDirectB6,
+		OpCbBitDirectB7,
+		OpCbResetDirectB0,
+		OpCbResetDirectB1,
+		OpCbResetDirectB2,
+		OpCbResetDirectB3,
+		OpCbResetDirectB4,
+		OpCbResetDirectB5,
+		OpCbResetDirectB6,
+		OpCbResetDirectB7,
+		OpCbSetDirectB0,
+		OpCbSetDirectB1,
+		OpCbSetDirectB2,
+		OpCbSetDirectB3,
+		OpCbSetDirectB4,
+		OpCbSetDirectB5,
+		OpCbSetDirectB6,
+		OpCbSetDirectB7:
+		return []RegID{RegB}
+	case
+		OpIncrementC,
+		OpDecrementC,
+		OpLoadImmediateC,
+		OpLoadDirectCC,
+		OpCbSwapDirectC,
+		OpCbRotateRegCRightShf,
+		OpCbRotateRegCRightRep,
+		OpCbRotateRegCLeftShf,
+		OpCbRotateRegCRightThC,
+		OpCbRotateRegCLeftThC,
+		OpCbRotateRegCRightRot,
+		OpCbRotateRegCLeftRot,
+		OpCbBitDirectC0,
+		OpCbBitDirectC1,
+		OpCbBitDirectC2,
+		OpCbBitDirectC3,
+		OpCbBitDirectC4,
+		OpCbBitDirectC5,
+		OpCbBitDirectC6,
+		OpCbBitDirectC7,
+		OpCbResetDirectC0,
+		OpCbResetDirectC1,
+		OpCbResetDirectC2,
+		OpCbResetDirectC3,
+		OpCbResetDirectC4,
+		OpCbResetDirectC5,
+		OpCbResetDirectC6,
+		OpCbResetDirectC7,
+		OpCbSetDirectC0,
+		OpCbSetDirectC1,
+		OpCbSetDirectC2,
+		OpCbSetDirectC3,
+		OpCbSetDirectC4,
+		OpCbSetDirectC5,
+		OpCbSetDirectC6,
+		OpCbSetDirectC7:
+		return []RegID{RegC}
+	case
+		OpLoadDirectDD,
+		OpIncrementD,
+		OpDecrementD,
+		OpLoadImmediateD,
+		OpCbSwapDirectD,
+		OpCbRotateRegDRightShf,
+		OpCbRotateRegDRightRep,
+		OpCbRotateRegDLeftShf,
+		OpCbRotateRegDRightThC,
+		OpCbRotateRegDLeftThC,
+		OpCbRotateRegDRightRot,
+		OpCbRotateRegDLeftRot,
+		OpCbBitDirectD0,
+		OpCbBitDirectD1,
+		OpCbBitDirectD2,
+		OpCbBitDirectD3,
+		OpCbBitDirectD4,
+		OpCbBitDirectD5,
+		OpCbBitDirectD6,
+		OpCbBitDirectD7,
+		OpCbResetDirectD0,
+		OpCbResetDirectD1,
+		OpCbResetDirectD2,
+		OpCbResetDirectD3,
+		OpCbResetDirectD4,
+		OpCbResetDirectD5,
+		OpCbResetDirectD6,
+		OpCbResetDirectD7,
+		OpCbSetDirectD0,
+		OpCbSetDirectD1,
+		OpCbSetDirectD2,
+		OpCbSetDirectD3,
+		OpCbSetDirectD4,
+		OpCbSetDirectD5,
+		OpCbSetDirectD6,
+		OpCbSetDirectD7:
+		return []RegID{RegD}
+	case
+		OpLoadDirectEE,
+		OpIncrementE,
+		OpDecrementE,
+		OpLoadImmediateE,
+		OpCbSwapDirectE,
+		OpCbRotateRegERightShf,
+		OpCbRotateRegERightRep,
+		OpCbRotateRegELeftShf,
+		OpCbRotateRegERightThC,
+		OpCbRotateRegELeftThC,
+		OpCbRotateRegERightRot,
+		OpCbRotateRegELeftRot,
+		OpCbBitDirectE0,
+		OpCbBitDirectE1,
+		OpCbBitDirectE2,
+		OpCbBitDirectE3,
+		OpCbBitDirectE4,
+		OpCbBitDirectE5,
+		OpCbBitDirectE6,
+		OpCbBitDirectE7,
+		OpCbResetDirectE0,
+		OpCbResetDirectE1,
+		OpCbResetDirectE2,
+		OpCbResetDirectE3,
+		OpCbResetDirectE4,
+		OpCbResetDirectE5,
+		OpCbResetDirectE6,
+		OpCbResetDirectE7,
+		OpCbSetDirectE0,
+		OpCbSetDirectE1,
+		OpCbSetDirectE2,
+		OpCbSetDirectE3,
+		OpCbSetDirectE4,
+		OpCbSetDirectE5,
+		OpCbSetDirectE6,
+		OpCbSetDirectE7:
+		return []RegID{RegE}
+	case
+		OpLoadDirectHH,
+		OpIncrementH,
+		OpDecrementH,
+		OpLoadImmediateH,
+		OpCbSwapDirectH,
+		OpCbRotateRegHRightShf,
+		OpCbRotateRegHRightRep,
+		OpCbRotateRegHLeftShf,
+		OpCbRotateRegHRightThC,
+		OpCbRotateRegHLeftThC,
+		OpCbRotateRegHRightRot,
+		OpCbRotateRegHLeftRot,
+		OpCbBitDirectH0,
+		OpCbBitDirectH1,
+		OpCbBitDirectH2,
+		OpCbBitDirectH3,
+		OpCbBitDirectH4,
+		OpCbBitDirectH5,
+		OpCbBitDirectH6,
+		OpCbBitDirectH7,
+		OpCbResetDirectH0,
+		OpCbResetDirectH1,
+		OpCbResetDirectH2,
+		OpCbResetDirectH3,
+		OpCbResetDirectH4,
+		OpCbResetDirectH5,
+		OpCbResetDirectH6,
+		OpCbResetDirectH7,
+		OpCbSetDirectH0,
+		OpCbSetDirectH1,
+		OpCbSetDirectH2,
+		OpCbSetDirectH3,
+		OpCbSetDirectH4,
+		OpCbSetDirectH5,
+		OpCbSetDirectH6,
+		OpCbSetDirectH7:
+		return []RegID{RegH}
+	case
+		OpLoadDirectLL,
+		OpIncrementL,
+		OpDecrementL,
+		OpLoadImmediateL,
+		OpCbSwapDirectL,
+		OpCbRotateRegLRightShf,
+		OpCbRotateRegLRightRep,
+		OpCbRotateRegLLeftShf,
+		OpCbRotateRegLRightThC,
+		OpCbRotateRegLLeftThC,
+		OpCbRotateRegLRightRot,
+		OpCbRotateRegLLeftRot,
+		OpCbBitDirectL0,
+		OpCbBitDirectL1,
+		OpCbBitDirectL2,
+		OpCbBitDirectL3,
+		OpCbBitDirectL4,
+		OpCbBitDirectL5,
+		OpCbBitDirectL6,
+		OpCbBitDirectL7,
+		OpCbResetDirectL0,
+		OpCbResetDirectL1,
+		OpCbResetDirectL2,
+		OpCbResetDirectL3,
+		OpCbResetDirectL4,
+		OpCbResetDirectL5,
+		OpCbResetDirectL6,
+		OpCbResetDirectL7,
+		OpCbSetDirectL0,
+		OpCbSetDirectL1,
+		OpCbSetDirectL2,
+		OpCbSetDirectL3,
+		OpCbSetDirectL4,
+		OpCbSetDirectL5,
+		OpCbSetDirectL6,
+		OpCbSetDirectL7:
+		return []RegID{RegL}
+	case
+		OpJumpAbsoluteHL,
+		OpIncrementIndirectHL,
+		OpDecrementIndirectHL,
+		OpLoadImmediateIndirectHL,
+		OpCbSwapIndirectHL,
+		OpCbRotateIndHLRightShf,
+		OpCbRotateIndHLRightRep,
+		OpCbRotateIndHLLeftShf,
+		OpCbRotateIndHLRightThC,
+		OpCbRotateIndHLLeftThC,
+		OpCbRotateIndHLRightRot,
+		OpCbRotateIndHLLeftRot,
+		OpCbBitIndirectHL0,
+		OpCbBitIndirectHL1,
+		OpCbBitIndirectHL2,
+		OpCbBitIndirectHL3,
+		OpCbBitIndirectHL4,
+		OpCbBitIndirectHL5,
+		OpCbBitIndirectHL6,
+		OpCbBitIndirectHL7,
+		OpCbResetIndirectHL0,
+		OpCbResetIndirectHL1,
+		OpCbResetIndirectHL2,
+		OpCbResetIndirectHL3,
+		OpCbResetIndirectHL4,
+		OpCbResetIndirectHL5,
+		OpCbResetIndirectHL6,
+		OpCbResetIndirectHL7,
+		OpCbSetIndirectHL0,
+		OpCbSetIndirectHL1,
+		OpCbSetIndirectHL2,
+		OpCbSetIndirectHL3,
+		OpCbSetIndirectHL4,
+		OpCbSetIndirectHL5,
+		OpCbSetIndirectHL6,
+		OpCbSetIndirectHL7:
+		return []RegID{RegHLInd}
+	case
+		OpLoadIndirectHLAIncrement,
+		OpLoadIndirectAHLIncrement,
+		OpLoadIndirectHLADecrement,
+		OpLoadIndirectAHLDecrement:
+		return []RegID{RegHLInd, RegA}
+	case
+		OpAddDirectABNoCarry,
+		OpAddDirectABCarry,
+		OpSubDirectABNoCarry,
+		OpSubDirectABCarry,
+		OpAndDirectAB,
+		OpXorDirectAB,
+		OpOrDirectAB,
+		OpCmpDirectAB,
+		OpLoadDirectBA,
+		OpLoadDirectAB:
+		return []RegID{RegA, RegB}
+	case
+		OpAddDirectACNoCarry,
+		OpAddDirectACCarry,
+		OpSubDirectACNoCarry,
+		OpSubDirectACCarry,
+		OpAndDirectAC,
+		OpXorDirectAC,
+		OpOrDirectAC,
+		OpCmpDirectAC,
+		OpLoadDirectCA,
+		OpLoadDirectAC:
+		return []RegID{RegA, RegC}
+	case
+		OpAddDirectADNoCarry,
+		OpAddDirectADCarry,
+		OpSubDirectADNoCarry,
+		OpSubDirectADCarry,
+		OpAndDirectAD,
+		OpXorDirectAD,
+		OpOrDirectAD,
+		OpCmpDirectAD,
+		OpLoadDirectDA,
+		OpLoadDirectAD:
+		return []RegID{RegA, RegD}
+	case
+		OpAddDirectAENoCarry,
+		OpAddDirectAECarry,
+		OpSubDirectAENoCarry,
+		OpSubDirectAECarry,
+		OpAndDirectAE,
+		OpXorDirectAE,
+		OpOrDirectAE,
+		OpCmpDirectAE,
+		OpLoadDirectEA,
+		OpLoadDirectAE:
+		return []RegID{RegA, RegE}
+	case
+		OpAddDirectAHNoCarry,
+		OpAddDirectAHCarry,
+		OpSubDirectAHNoCarry,
+		OpSubDirectAHCarry,
+		OpAndDirectAH,
+		OpXorDirectAH,
+		OpOrDirectAH,
+		OpCmpDirectAH,
+		OpLoadDirectHA,
+		OpLoadDirectAH:
+		return []RegID{RegA, RegH}
+	case
+		OpAddDirectALNoCarry,
+		OpAddDirectALCarry,
+		OpSubDirectALNoCarry,
+		OpSubDirectALCarry,
+		OpAndDirectAL,
+		OpXorDirectAL,
+		OpOrDirectAL,
+		OpCmpDirectAL,
+		OpLoadDirectAL,
+		OpLoadDirectLA:
+		return []RegID{RegA, RegL}
+	case OpAddIndirectAHLNoCarry,
+		OpAddIndirectAHLCarry,
+		OpSubIndirectAHLNoCarry,
+		OpSubIndirectAHLCarry,
+		OpAndIndirectAHL,
+		OpXorIndirectAHL,
+		OpOrIndirectAHL,
+		OpCmpIndirectAHL,
+		OpLoadIndirectAHL,
+		OpLoadIndirectHLA:
+		return []RegID{RegA, RegHLInd}
+	case
+		OpLoadDirectBC,
+		OpLoadDirectCB:
+		return []RegID{RegB, RegC}
+	case
+		OpLoadDirectBD,
+		OpLoadDirectDB:
+		return []RegID{RegB, RegD}
+	case
+		OpLoadDirectBE,
+		OpLoadDirectEB:
+		return []RegID{RegB, RegE}
+	case
+		OpLoadDirectBH,
+		OpLoadDirectHB:
+		return []RegID{RegB, RegH}
+	case
+		OpLoadDirectBL,
+		OpLoadDirectLB:
+		return []RegID{RegB, RegL}
+	case
+		OpLoadIndirectBHL,
+		OpLoadIndirectHLB:
+		return []RegID{RegB, RegHLInd}
+	case
+		OpLoadDirectCD,
+		OpLoadDirectDC:
+		return []RegID{RegC, RegD}
+	case
+		OpLoadDirectCE,
+		OpLoadDirectEC:
+		return []RegID{RegC, RegE}
+	case
+		OpLoadDirectCH,
+		OpLoadDirectHC:
+		return []RegID{RegC, RegH}
+	case
+		OpLoadDirectCL,
+		OpLoadDirectLC:
+		return []RegID{RegC, RegL}
+	case
+		OpLoadIndirectCHL,
+		OpLoadIndirectHLC:
+		return []RegID{RegC, RegHLInd}
+	case
+		OpLoadDirectDE,
+		OpLoadDirectED:
+		return []RegID{RegD, RegE}
+	case
+		OpLoadDirectDH,
+		OpLoadDirectHD:
+		return []RegID{RegD, RegH}
+	case
+		OpLoadDirectDL,
+		OpLoadDirectLD:
+		return []RegID{RegD, RegL}
+	case
+		OpLoadIndirectDHL,
+		OpLoadIndirectHLD:
+		return []RegID{RegD, RegHLInd}
+	case
+		OpLoadDirectEH,
+		OpLoadDirectHE:
+		return []RegID{RegE, RegH}
+	case
+		OpLoadDirectEL,
+		OpLoadDirectLE:
+		return []RegID{RegE, RegL}
+	case
+		OpLoadIndirectEHL,
+		OpLoadIndirectHLE:
+		return []RegID{RegE, RegHLInd}
+	case
+		OpLoadDirectHL,
+		OpLoadDirectLH:
+		return []RegID{RegH, RegL}
+	case
+		OpLoadIndirectHHL,
+		OpLoadIndirectHLH:
+		return []RegID{RegH, RegHLInd}
+	case
+		OpLoadIndirectHLL,
+		OpLoadIndirectLHL:
+		return []RegID{RegHLInd, RegL}
+	case OpPopAF,
+		OpPushAF:
+		return []RegID{RegAF}
+	case OpLoadHighMemCA,
+		OpLoadHighRegAC:
+		return []RegID{RegA, RegCInd}
+	case
+		OpLoadImmediateBC,
+		OpIncrementBC,
+		OpDecrementBC,
+		OpPushBC,
+		OpPopBC:
+		return []RegID{RegBC}
+	case
+		OpLoadImmediateDE,
+		OpIncrementDE,
+		OpDecrementDE,
+		OpPushDE,
+		OpPopDE:
+		return []RegID{RegDE}
+	case
+		OpLoadImmediateHL,
+		OpIncrementHL,
+		OpDecrementHL,
+		OpAddDirectHLHL,
+		OpPopHL,
+		OpPushHL:
+		return []RegID{RegHL}
+	case
+		OpAddImmediateSignedSP,
+		OpStoreMemSP,
+		OpLoadImmediateSP,
+		OpIncrementSP,
+		OpDecrementSP:
+		return []RegID{RegSP}
+	case
+		OpLoadIndirectBCA,
+		OpLoadIndirectABC:
+		return []RegID{RegA, RegBCInd}
+	case
+		OpLoadIndirectDEA,
+		OpLoadIndirectADE:
+		return []RegID{RegA, RegDEInd}
+	case
+		OpAddDirectHLBC:
+		return []RegID{RegHL, RegBC}
+	case
+		OpAddDirectHLDE:
+		return []RegID{RegHL, RegDE}
+	case
+		OpLoadOffsetHLSP,
+		OpLoadDirectSPHL,
+		OpAddDirectHLSP:
+		return []RegID{RegHL, RegSP}
+	}
+	return []RegID{}
+}
+
 // RegID identifies a register
 type RegID uint8
 
@@ -1596,4 +2159,19 @@ func (r RegID) String() string {
 		return "(C)"
 	}
 	return "<unknown RegID>"
+}
+
+// Unref gets the direct register ID of an indirect register ID
+func (reg RegID) Unref() RegID {
+	switch reg {
+	case RegBCInd:
+		return RegBC
+	case RegDEInd:
+		return RegDE
+	case RegHLInd:
+		return RegHL
+	case RegCInd:
+		return RegC
+	}
+	panic("Unreferencing direct register")
 }

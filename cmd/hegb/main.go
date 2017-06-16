@@ -17,6 +17,7 @@ func main() {
 
 	romdata := flag.Bool("rominfo", false, "Print ROM info and exit")
 	usebs := flag.Bool("bootrom", true, "Use boot ROM")
+	dumpcode := flag.Bool("dumpcode", false, "Dump code as its being executed")
 	flag.Parse()
 
 	// Must be at least one non-flag argument (ROM file)
@@ -39,7 +40,8 @@ func main() {
 	assert(err)
 
 	gb := hegb.MakeGB(rom, hegb.EmulatorOptions{
-		SkipBootstrap: !(*usebs),
+		UseBootstrap: *usebs,
+		DumpCode:     *dumpcode,
 	})
 	gb.Run()
 }

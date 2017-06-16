@@ -609,8 +609,8 @@ func TestHandlerPresence(t *testing.T) {
 func runCode(code []byte) *Gameboy {
 	rom := makeTestROM(append(code, byte(OpStop)))
 	gb := MakeGB(rom, EmulatorOptions{
-		SkipBootstrap: true,
-		Test:          true,
+		UseBootstrap: false,
+		Test:         true,
 	})
 	gb.Run()
 	return gb

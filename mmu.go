@@ -1,5 +1,7 @@
 package hegb
 
+import "fmt"
+
 var bootstrap = []byte{
 	0x31, 0xFE, 0xFF, 0xAF, 0x21, 0xFF, 0x9F, 0x32, 0xCB, 0x7C, 0x20, 0xFB, 0x21,
 	0x26, 0xFF, 0x0E, 0x11, 0x3E, 0x80, 0x32, 0xE2, 0x0C, 0x3E, 0xF3, 0xE2, 0x32,
@@ -89,7 +91,14 @@ func (m *MMU) Read(addr uint16) uint8 {
 	}
 	// ff00 - ff7f => I/O Registers
 	if addr < 0xff80 {
-		panic("todo")
+		ioreg := ioregister(addr)
+		// Check if the register exists/is implemented
+		fn, ok := ioreadhandlers[ioreg]
+		if !ok {
+			// If not, panic!
+			panic(fmt.Errorf("IO register not found/implemented: [%04X] %s", addr, ioreg))
+		}
+		return fn(m)
 	}
 	// ff80 - fffe => High RAM (HRAM)
 	if addr < 0xffff {
@@ -141,7 +150,14 @@ func (m *MMU) Write(addr uint16, value uint8) {
 	}
 	// ff00 - ff7f => I/O Registers
 	if addr < 0xff80 {
-		panic("todo")
+		ioreg := ioregister(addr)
+		// Check if the register exists/is implemented
+		fn, ok := iowritehandlers[ioreg]
+		if !ok {
+			// If not, panic!
+			panic(fmt.Errorf("IO register not found/implemented: [%04X] %s", addr, ioreg))
+		}
+		fn(m, value)
 	}
 	// ff80 - fffe => High RAM (HRAM)
 	if addr < 0xffff {
