@@ -232,6 +232,10 @@ func (r ioregister) String() string {
 	return "<invalid IO register>"
 }
 
-var ioreadhandlers = map[ioregister]IOReadHandler{}
+var ioreadhandlers = map[ioregister]IOReadHandler{
+	MIOInterruptFlags: func(m *MMU) uint8 { return m.cpu.InterruptMask },
+}
 
-var iowritehandlers = map[ioregister]IOWriteHandler{}
+var iowritehandlers = map[ioregister]IOWriteHandler{
+	MIOInterruptFlags: func(m *MMU, val uint8) { m.cpu.InterruptMask = val },
+}

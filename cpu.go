@@ -9,12 +9,10 @@ import (
 
 // CPU is an emulator of the Z80 CPU used in the Game Boy
 type CPU struct {
+	// CPU emulator flags
 	Running  bool
 	Test     bool
 	DumpCode bool
-
-	MMU *MMU
-	GPU *GPU
 
 	// Registers
 	AF Register
@@ -25,12 +23,20 @@ type CPU struct {
 	SP Register // Stack pointer
 	PC Register // Program counter
 
+	// Interrupt registers
+	InterruptEnable bool
+	InterruptMask   uint8
+
+	// Cycle counters
 	Cycles Cycles
 
-	InterruptEnable bool
-
+	// Buffers (for debugging)
 	curInstruction instruction
 	curOpcodePos   uint16 // Mostly for debug purposes
+
+	// Links to other components
+	MMU *MMU
+	GPU *GPU
 }
 
 func (c *CPU) decode() {

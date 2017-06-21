@@ -33,16 +33,18 @@ type ZRAM [128]byte
 
 // MMU manages access to the emulated Game boy memory
 type MMU struct {
+	// Memory banks
 	WRAM      WRAM
 	WRAMExtra []WRAM
 	WRAMID    uint8
-
-	UseBootstrap bool
-
-	InterruptMask uint8
-
 	ZRAM ZRAM
 
+	// Memory flags and registers
+	UseBootstrap bool
+
+	// Sound registers
+
+	// Links to other components
 	cpu *CPU
 	rom *ROM
 	gpu *GPU
