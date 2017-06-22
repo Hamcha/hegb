@@ -548,54 +548,54 @@ func loadRegister16(regtgt, regsrc RegID) InstructionHandler {
 }
 
 func storeHighA(c *CPU) {
-	c.MMU.Write(0xff00+uint16(nextu8(c)), c.AF.Left())
+	c.Write(0xff00+uint16(nextu8(c)), c.AF.Left())
 	c.Cycles.Add(2, 12)
 }
 
 func loadHighA(c *CPU) {
-	c.AF.SetLeft(c.MMU.Read(0xff00 + uint16(nextu8(c))))
+	c.AF.SetLeft(c.Read(0xff00 + uint16(nextu8(c))))
 	c.Cycles.Add(2, 12)
 }
 
 func storeA(c *CPU) {
 	addr := nextu16(c)
-	c.MMU.Write(addr, c.AF.Left())
+	c.Write(addr, c.AF.Left())
 	c.Cycles.Add(3, 16)
 }
 
 func loadA(c *CPU) {
 	addr := nextu16(c)
-	c.AF.SetLeft(c.MMU.Read(addr))
+	c.AF.SetLeft(c.Read(addr))
 	c.Cycles.Add(3, 16)
 }
 
 func storeSP(c *CPU) {
 	addr := nextu16(c)
-	c.MMU.Write(addr, c.SP.Right())
-	c.MMU.Write(addr+1, c.SP.Left())
+	c.Write(addr, c.SP.Right())
+	c.Write(addr+1, c.SP.Left())
 	c.Cycles.Add(3, 20)
 }
 
 func loadAInc(c *CPU) {
-	c.MMU.Write(uint16(c.HL), c.AF.Left())
+	c.Write(uint16(c.HL), c.AF.Left())
 	c.HL++
 	c.Cycles.Add(1, 8)
 }
 
 func loadADec(c *CPU) {
-	c.MMU.Write(uint16(c.HL), c.AF.Left())
+	c.Write(uint16(c.HL), c.AF.Left())
 	c.HL--
 	c.Cycles.Add(1, 8)
 }
 
 func storeAInc(c *CPU) {
-	c.AF.SetLeft(c.MMU.Read(uint16(c.HL)))
+	c.AF.SetLeft(c.Read(uint16(c.HL)))
 	c.HL++
 	c.Cycles.Add(1, 8)
 }
 
 func storeADec(c *CPU) {
-	c.AF.SetLeft(c.MMU.Read(uint16(c.HL)))
+	c.AF.SetLeft(c.Read(uint16(c.HL)))
 	c.HL--
 	c.Cycles.Add(1, 8)
 }
@@ -1092,14 +1092,14 @@ func jumpr8(flag flagID) InstructionHandler {
 }
 
 func _push16(c *CPU, reg Register) {
-	c.MMU.Write(uint16(c.SP)-1, reg.Left())
-	c.MMU.Write(uint16(c.SP)-2, reg.Right())
+	c.Write(uint16(c.SP)-1, reg.Left())
+	c.Write(uint16(c.SP)-2, reg.Right())
 	c.SP -= 2
 }
 
 func _pop16(c *CPU, reg *Register) {
-	reg.SetRight(c.MMU.Read(uint16(c.SP)))
-	reg.SetLeft(c.MMU.Read(uint16(c.SP) + 1))
+	reg.SetRight(c.Read(uint16(c.SP)))
+	reg.SetLeft(c.Read(uint16(c.SP) + 1))
 	c.SP += 2
 }
 
@@ -1220,13 +1220,13 @@ func getreg8(c *CPU, id RegID) uint8 {
 	case RegL:
 		return c.HL.Right()
 	case RegBCInd:
-		return c.MMU.Read(uint16(c.BC))
+		return c.Read(uint16(c.BC))
 	case RegDEInd:
-		return c.MMU.Read(uint16(c.DE))
+		return c.Read(uint16(c.DE))
 	case RegHLInd:
-		return c.MMU.Read(uint16(c.HL))
+		return c.Read(uint16(c.HL))
 	case RegCInd:
-		return c.MMU.Read(0xff00 + uint16(c.BC.Right()))
+		return c.Read(0xff00 + uint16(c.BC.Right()))
 	}
 	panic("invalid RegID provided to getreg8")
 }
@@ -1250,13 +1250,13 @@ func setreg8(c *CPU, id RegID, val uint8) {
 	case RegL:
 		c.HL.SetRight(val)
 	case RegBCInd:
-		c.MMU.Write(uint16(c.BC), val)
+		c.Write(uint16(c.BC), val)
 	case RegDEInd:
-		c.MMU.Write(uint16(c.DE), val)
+		c.Write(uint16(c.DE), val)
 	case RegHLInd:
-		c.MMU.Write(uint16(c.HL), val)
+		c.Write(uint16(c.HL), val)
 	case RegCInd:
-		c.MMU.Write(0xff00+uint16(c.BC.Right()), val)
+		c.Write(0xff00+uint16(c.BC.Right()), val)
 	default:
 		panic("invalid RegID provided to setreg8")
 	}
@@ -1282,14 +1282,14 @@ func reg16(c *CPU, id RegID) *Register {
 
 // Read uint16 from memory
 func nextu16(c *CPU) uint16 {
-	val := binary.LittleEndian.Uint16([]byte{c.MMU.Read(uint16(c.PC)), c.MMU.Read(uint16(c.PC) + 1)})
+	val := binary.LittleEndian.Uint16([]byte{c.Read(uint16(c.PC)), c.Read(uint16(c.PC) + 1)})
 	c.PC += 2
 	return val
 }
 
 // Read uint8 from memory
 func nextu8(c *CPU) uint8 {
-	val := c.MMU.Read(uint16(c.PC))
+	val := c.Read(uint16(c.PC))
 	c.PC++
 	return val
 }

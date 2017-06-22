@@ -25,7 +25,21 @@ type CPU struct {
 
 	// Interrupt registers
 	InterruptEnable bool
-	InterruptMask   uint8
+
+	VBlankIntEnable bool
+	VBlankIntFlag   bool
+
+	LCDStatEnable bool
+	LCDStatFlag   bool
+
+	TimerIntEnable bool
+	TimerIntFlag   bool
+
+	SerialIntEnable bool
+	SerialIntFlag   bool
+
+	JoypadIntEnable bool
+	JoypadIntFlag   bool
 
 	// Cycle counters
 	Cycles Cycles
@@ -34,9 +48,19 @@ type CPU struct {
 	curInstruction instruction
 	curOpcodePos   uint16 // Mostly for debug purposes
 
+	// Memory banks
+	WRAM      WRAM
+	WRAMExtra []WRAM
+	WRAMID    uint8
+	ZRAM      ZRAM
+
+	// Memory flags and registers
+	UseBootstrap bool
+
 	// Links to other components
-	MMU *MMU
-	GPU *GPU
+	rom *ROM
+	GPU
+	Sound
 }
 
 func (c *CPU) decode() {
@@ -85,6 +109,61 @@ func (c *CPU) Run() {
 		//TODO Clock accurate stepping
 		c.Step()
 	}
+}
+
+// MMU IO interrupt functions
+func (c *CPU) interruptMask() (out uint8) {
+	if c.VBlankIntEnable {
+		out |= 0x01
+	}
+	if c.LCDStatEnable {
+		out |= 0x02
+	}
+	if c.TimerIntEnable {
+		out |= 0x04
+	}
+	if c.SerialIntEnable {
+		out |= 0x08
+	}
+	if c.JoypadIntEnable {
+		out |= 0x10
+	}
+	return
+}
+
+func (c *CPU) setInterruptMask(in uint8) {
+	c.VBlankIntEnable = in&0x01 == 0x01
+	c.LCDStatEnable = in&0x02 == 0x02
+	c.TimerIntEnable = in&0x04 == 0x04
+	c.SerialIntEnable = in&0x08 == 0x08
+	c.JoypadIntEnable = in&0x10 == 0x10
+}
+
+func (c *CPU) interruptFlags() (out uint8) {
+	if c.VBlankIntFlag {
+		out |= 0x01
+	}
+	if c.LCDStatFlag {
+		out |= 0x02
+	}
+	if c.TimerIntFlag {
+		out |= 0x04
+	}
+	if c.SerialIntFlag {
+		out |= 0x08
+	}
+	if c.JoypadIntFlag {
+		out |= 0x10
+	}
+	return
+}
+
+func (c *CPU) setInterruptFlags(in uint8) {
+	c.VBlankIntFlag = in&0x01 == 0x01
+	c.LCDStatFlag = in&0x02 == 0x02
+	c.TimerIntFlag = in&0x04 == 0x04
+	c.SerialIntFlag = in&0x08 == 0x08
+	c.JoypadIntFlag = in&0x10 == 0x10
 }
 
 // Flags describe each flag in the flag register
@@ -194,23 +273,23 @@ func (c *CPU) printInstruction(i instruction) string {
 	str := i.String()
 	// Replace parameters with their actual values
 	if strings.Index(str, "d8") > 0 {
-		val := c.MMU.Read(uint16(c.PC))
+		val := c.Read(uint16(c.PC))
 		str = strings.Replace(str, "d8", fmt.Sprintf("$%02x (%d)", val, val), 1)
 	}
 	if strings.Index(str, "d16") > 0 {
-		val := binary.LittleEndian.Uint16([]byte{c.MMU.Read(uint16(c.PC)), c.MMU.Read(uint16(c.PC) + 1)})
+		val := binary.LittleEndian.Uint16([]byte{c.Read(uint16(c.PC)), c.Read(uint16(c.PC) + 1)})
 		str = strings.Replace(str, "d16", fmt.Sprintf("$%04x (%d)", val, val), 1)
 	}
 	if strings.Index(str, "r8") > 0 {
-		val := int8(c.MMU.Read(uint16(c.PC)))
+		val := int8(c.Read(uint16(c.PC)))
 		str = strings.Replace(str, "r8", fmt.Sprintf("%d", val), 1)
 	}
 	if strings.Index(str, "a8") > 0 {
-		val := c.MMU.Read(uint16(c.PC))
+		val := c.Read(uint16(c.PC))
 		str = strings.Replace(str, "a8", fmt.Sprintf("$FF%02x", val), 1)
 	}
 	if strings.Index(str, "a16") > 0 {
-		val := binary.LittleEndian.Uint16([]byte{c.MMU.Read(uint16(c.PC)), c.MMU.Read(uint16(c.PC) + 1)})
+		val := binary.LittleEndian.Uint16([]byte{c.Read(uint16(c.PC)), c.Read(uint16(c.PC) + 1)})
 		str = strings.Replace(str, "a16", fmt.Sprintf("$%04x", val), 1)
 	}
 	// Add padding

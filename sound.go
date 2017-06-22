@@ -1,7 +1,7 @@
 package hegb
 
 type Sound struct {
-	Enable bool
+	SoundEnable bool
 
 	PlayLeft    bool
 	PlayRight   bool
@@ -87,3 +87,32 @@ const (
 	wol50   waveOutputLevel = 2 // 50% Volume
 	wol25   waveOutputLevel = 3 // 25% Volume
 )
+
+// MMU IO functions
+
+func soundEnableRead(c *CPU) (out uint8) {
+	if c.ChToneSweep.Enable {
+		out |= 0x01
+	}
+	if c.ChTone.Enable {
+		out |= 0x02
+	}
+	if c.ChWave.Enable {
+		out |= 0x04
+	}
+	if c.ChNoise.Enable {
+		out |= 0x08
+	}
+	if c.SoundEnable {
+		out |= 0x80
+	}
+	return
+}
+
+func soundEnableWrite(c *CPU, val uint8) {
+	c.ChToneSweep.Enable = val&0x01 == 0x01
+	c.ChTone.Enable = val&0x02 == 0x02
+	c.ChWave.Enable = val&0x04 == 0x04
+	c.ChNoise.Enable = val&0x08 == 0x08
+	c.SoundEnable = val&0x80 == 0x80
+}

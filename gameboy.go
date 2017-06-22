@@ -5,9 +5,7 @@ import "os"
 
 // Gameboy is an emulated Game boy
 type Gameboy struct {
-	mmu     *MMU
 	cpu     *CPU
-	gpu     *GPU
 	options EmulatorOptions
 }
 
@@ -20,34 +18,29 @@ type EmulatorOptions struct {
 
 // MakeGB creates a Game Boy and loads the rom in it
 func MakeGB(romdata *ROM, options EmulatorOptions) *Gameboy {
-	gpu := &GPU{}
-	mmu := &MMU{
-		rom:          romdata,
-		gpu:          gpu,
-		WRAMExtra:    []WRAM{{}},
+	cpu := &CPU{
+		rom: romdata,
+
+		WRAMExtra: []WRAM{{}},
+
+		Test:         options.Test,
+		DumpCode:     options.DumpCode,
 		UseBootstrap: options.UseBootstrap,
 	}
-	cpu := &CPU{
-		GPU:      gpu,
-		MMU:      mmu,
-		Test:     options.Test,
-		DumpCode: options.DumpCode,
-	}
-	mmu.cpu = cpu
 
 	// If bootstrap is skipped, skip to entrypoint
 	if !options.UseBootstrap {
 		cpu.PC = Register(romdata.Header.Entrypoint)
 	}
 
-	return &Gameboy{mmu, cpu, gpu, options}
+	return &Gameboy{cpu, options}
 }
 
 // Run starts up the emulated game boy and blocks until execution ends
 func (g *Gameboy) Run() {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Fprintln(os.Stderr, "CPU panicked, dump and error message follows:\n")
+			fmt.Fprint(os.Stderr, "CPU panicked, dump and error message follows:\n\n")
 			g.dump()
 			panic(r)
 		}

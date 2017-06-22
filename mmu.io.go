@@ -4,10 +4,10 @@ package hegb
 type ioregister uint16
 
 // IOReadHandler handles read access to a single IO register
-type IOReadHandler func(m *MMU) uint8
+type IOReadHandler func(c *CPU) uint8
 
 // IOWriteHandler handles write access to a single IO register
-type IOWriteHandler func(m *MMU, val uint8)
+type IOWriteHandler func(c *CPU, val uint8)
 
 // All MMU IO registers
 const (
@@ -233,9 +233,11 @@ func (r ioregister) String() string {
 }
 
 var ioreadhandlers = map[ioregister]IOReadHandler{
-	MIOInterruptFlags: func(m *MMU) uint8 { return m.cpu.InterruptMask },
+	MIOInterruptFlags: func(c *CPU) uint8 { return c.interruptFlags() },
+	MIOSoundEnable:    soundEnableRead,
 }
 
 var iowritehandlers = map[ioregister]IOWriteHandler{
-	MIOInterruptFlags: func(m *MMU, val uint8) { m.cpu.InterruptMask = val },
+	MIOInterruptFlags: func(c *CPU, val uint8) { c.setInterruptFlags(val) },
+	MIOSoundEnable:    soundEnableWrite,
 }
