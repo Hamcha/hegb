@@ -2162,8 +2162,8 @@ func (r RegID) String() string {
 }
 
 // Unref gets the direct register ID of an indirect register ID
-func (reg RegID) Unref() RegID {
-	switch reg {
+func (r RegID) Unref() RegID {
+	switch r {
 	case RegBCInd:
 		return RegBC
 	case RegDEInd:

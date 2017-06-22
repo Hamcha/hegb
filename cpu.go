@@ -255,6 +255,7 @@ func (c *Cycles) Add(machine, cpu int) {
 	c.Machine += machine
 }
 
+// Dump prints information about the CPU state to stderr
 func (c *CPU) Dump() {
 	// Print current instruction (re-decode to fix PC position)
 	c.PC = Register(c.curOpcodePos)
