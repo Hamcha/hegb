@@ -141,6 +141,7 @@ func (c *CPU) Write(addr uint16, value uint8) {
 			panic(fmt.Errorf("IO register not found/implemented: [%04X] %s", addr, ioreg))
 		}
 		fn(c, value)
+		return
 	}
 	// ff80 - fffe => High RAM (HRAM)
 	if addr < 0xffff {
