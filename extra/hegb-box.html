@@ -1,44 +1,69 @@
 <!doctype html>
 <html>
 <head>
-<title>Current progress</title>
-<style>
-body {
-	font-family: monospace;
-	padding: 10px;
-}
-h1 {
-	margin: 5px;
-}
-h2 {
-	margin: 10px 5px;
-}
-table.opcodes {
-	border-collapse: collapse;
-	margin: 5px;
-	display: inline-block;
-}
-table.opcodes tbody {
-	border: 1px solid grey;
-}
-table.opcodes td {
-	border: 1px solid #fff;
-	padding: 3px 4px;
-	font-size: 9pt;
-}
-table.opcodes th {
-	padding: 3px;
-}
-.check {
-	background-color: #18a018;
-	color: white;
-}
-.ignored {
-	background-color: grey;
-	color: grey;
-	border: 0;
-}
-</style>
+	<meta charset="utf-8" />
+	<title>Current progress</title>
+	<style>
+		body {
+			font-family: monospace;
+			padding: 10px;
+		}
+		h1 {
+			margin: 5px;
+		}
+		h2 {
+			margin: 10px 5px;
+		}
+		table.opcodes {
+			border-collapse: collapse;
+			margin: 5px;
+			display: inline-block;
+		}
+		table.opcodes tbody {
+			border: 1px solid grey;
+		}
+		table.opcodes td {
+			border: 1px solid #fff;
+			padding: 3px 4px;
+			font-size: 9pt;
+		}
+		table.opcodes th {
+			padding: 3px;
+		}
+		.check {
+			background-color: #18a018;
+			color: white;
+		}
+		.ignored {
+			background-color: grey;
+			color: grey;
+			border: 0;
+		}
+		.reg {
+			border-collapse: collapse;
+			display: inline-block;
+			margin-right: 10pt;
+			vertical-align: top;
+		}
+		.reg td {
+			border: 1px solid #ccc;
+			padding: 2px 4px;
+		}
+		.reg th {
+			padding: 2px 4px;
+		}
+		td.regno, td.regok, .reg td:first-child {
+			text-align: center;
+		}
+		td.regok {
+			color: white;
+			background-color: #18a018;
+		}
+		td.regno {
+			color: white;
+			background-color: #a01818;
+		}
+	</style>
 </head>
 <body>
 <div id="root">
@@ -57,8 +82,12 @@ table.opcodes th {
 		<tbody id="cb"></tbody>
 	</table>
 	<h2>I/O registers</h2>
+	<!-- IO Reg code start -->
+	<table class="reg"><tr><th>Address</th><th>Register name</th><th>Read</th><th>Write</th></tr><tr><td>FF00</td><td>Joypad port</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF01</td><td>Serial IO data</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF02</td><td>Serial IO control</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF04</td><td>Divider</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF05</td><td>Timer counter</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF06</td><td>Timer modulo</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF07</td><td>Timer control</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF0F</td><td>Interrupt flags</td><td class="regok">✓</td><td class="regok">✓</td></tr><tr><td>FF10</td><td>Sweep (Sound mode #1)</td><td class="regok">✓</td><td class="regok">✓</td></tr><tr><td>FF11</td><td>Sound length / Pattern duty (Sound mode #1)</td><td class="regok">✓</td><td class="regok">✓</td></tr><tr><td>FF12</td><td>Control (Sound mode #1)</td><td class="regok">✓</td><td class="regok">✓</td></tr><tr><td>FF13</td><td>Frequency low (Sound mode #1)</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF14</td><td>Frequency high (Sound mode #1)</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF16</td><td>Sound length / Pattern duty (Sound mode #2)</td><td class="regok">✓</td><td class="regok">✓</td></tr><tr><td>FF17</td><td>Control (Sound mode #2)</td><td class="regok">✓</td><td class="regok">✓</td></tr><tr><td>FF18</td><td>Frequency low (Sound mode #2)</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF19</td><td>Frequency high (Sound mode #2)</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF1A</td><td>Control (Sound mode #3)</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF1B</td><td>Sound length (Sound mode #3)</td><td class="regok">✓</td><td class="regok">✓</td></tr><tr><td>FF1C</td><td>Output level (Sound mode #3)</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF1D</td><td>Frequency low (Sound mode #3)</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF1E</td><td>Frequency high (Sound mode #3)</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF20</td><td>Sound length / Pattern duty (Sound mode #4)</td><td class="regok">✓</td><td class="regok">✓</td></tr><tr><td>FF21</td><td>Control (Sound mode #4)</td><td class="regok">✓</td><td class="regok">✓</td></tr><tr><td>FF22</td><td>Polynomial counter (Sound mode #4)</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF23</td><td>Frequency high (Sound mode #4)</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF24</td><td>Channel / Volume control</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF25</td><td>Sound output terminal selector</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF26</td><td>Sound ON/OFF</td><td class="regok">✓</td><td class="regok">✓</td></tr><tr><td>FF40</td><td>LCD Control</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF41</td><td>LCD Status</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF42</td><td>Background vertical scrolling</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF43</td><td>Background horizontal scrolling</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF44</td><td>Current scanline</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF45</td><td>Scanline comparison</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF46</td><td>DMA transfer control</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF47</td><td>Background palette</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF48</td><td>Sprite palette #0</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF49</td><td>Sprite palette #1</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF4A</td><td>Window Y position</td><td class="regno">✕</td><td class="regno">✕</td></tr><tr><td>FF4B</td><td>Window X position</td><td class="regno">✕</td><td class="regno">✕</td></tr></table>
+	<!-- IO Reg code end -->
 </div>
 <script>
+// Generate opcode table
 const opcodes = "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111-1111111-1111111-1-11111--111111---111111-1111111--111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
 const stt = document.getElementById("standard");
 const scb = document.getElementById("cb");
@@ -72,6 +101,27 @@ for (let i = 0; i < opcodes.length; i++) {
 	cell.className = opcodes[i] == '1' ? "check" : opcodes[i] == '-' ? "ignored" : "";
 	cell.appendChild(document.createTextNode(padhex(i)));
 }
+
+// Split reg table in two rows
+const regrowslen = document.querySelectorAll(".reg tr").length - 1; // Exclude header
+const splitPoint = Math.ceil(regrowslen/2);
+
+// Duplicate table
+const origtable = document.querySelector(".reg");
+const secregtable = origtable.cloneNode(true);
+origtable.parentNode.insertBefore(secregtable, origtable);
+
+Array.prototype.slice.call(secregtable.querySelectorAll("tr")).forEach((row, id) => {
+	if (id > splitPoint) {
+		row.parentNode.removeChild(row);
+	}
+});
+Array.prototype.slice.call(origtable.querySelectorAll("tr"), 1).forEach((row, id) => {
+	if (id <= splitPoint-1) {
+		row.parentNode.removeChild(row);
+	}
+});
+
 </script>
 </body>
 </html>

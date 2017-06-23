@@ -22,14 +22,16 @@ type soundChannel struct {
 	Restart       bool
 	OutputLeft    bool
 	OutputRight   bool
+	Envelope      envelope // Wave channel does not have this!
 
 	// Tone+Sweep specific
-	SweepTime sweepTime
+	SweepTime      sweepTime
+	SweepDirection sweepDirection
+	SweepShift     uint8 // 0-7
 
 	// Tone channels specific
-	ToneLength   uint8 // 0-63
-	ToneDuty     toneDuty
-	ToneEnvelope envelope
+	ToneLength uint8 // 0-63
+	ToneDuty   toneDuty
 
 	// Wave channel specific
 	WaveEnable      bool
@@ -39,7 +41,6 @@ type soundChannel struct {
 
 	// Noise channel specific
 	NoiseLength        uint8 // 0-63
-	NoiseEnvelope      envelope
 	NoisePolyCounter   uint8
 	NoiseCounterConsec uint8
 }
@@ -68,15 +69,15 @@ const (
 
 type envelope struct {
 	InitialVolume uint8 // 0-16 (0 = No sound)
-	Direction     envelopeDirection
+	Direction     sweepDirection
 	Sweep         sweepTime
 }
 
-type envelopeDirection uint8
+type sweepDirection uint8
 
 const (
-	envDecrease envelopeDirection = 0
-	envIncrease envelopeDirection = 1
+	swpDecrease sweepDirection = 0
+	swpIncrease sweepDirection = 1
 )
 
 type waveOutputLevel uint8
@@ -86,6 +87,15 @@ const (
 	wol100  waveOutputLevel = 1 // 100% Volume
 	wol50   waveOutputLevel = 2 // 50% Volume
 	wol25   waveOutputLevel = 3 // 25% Volume
+)
+
+type channelType uint8
+
+const (
+	sndchToneSweep channelType = iota
+	sndchTone
+	sndchWave
+	sndchNoise
 )
 
 // MMU IO functions
@@ -115,4 +125,88 @@ func soundEnableWrite(c *CPU, val uint8) {
 	c.ChWave.Enable = val&0x04 == 0x04
 	c.ChNoise.Enable = val&0x08 == 0x08
 	c.SoundEnable = val&0x80 == 0x80
+}
+
+func soundLengthRead(ch channelType) IOReadHandler {
+	return func(c *CPU) (out uint8) {
+		switch ch {
+		case sndchToneSweep:
+			out |= uint8(c.ChToneSweep.ToneDuty) << 6
+			out |= c.ChToneSweep.ToneLength
+		case sndchTone:
+			out |= uint8(c.ChTone.ToneDuty) << 6
+			out |= c.ChTone.ToneLength
+		case sndchWave:
+			out |= c.ChWave.WaveLength
+		case sndchNoise:
+			out |= c.ChNoise.NoiseLength
+		}
+		return
+	}
+}
+
+func soundLengthWrite(ch channelType) IOWriteHandler {
+	return func(c *CPU, val uint8) {
+		switch ch {
+		case sndchToneSweep:
+			c.ChToneSweep.ToneDuty = toneDuty((val >> 6) & 0x03)
+			c.ChToneSweep.ToneLength = val & 0x3f
+		case sndchTone:
+			c.ChTone.ToneDuty = toneDuty((val >> 6) & 0x03)
+			c.ChTone.ToneLength = val & 0x3f
+		case sndchWave:
+			c.ChWave.WaveLength = val
+		case sndchNoise:
+			c.ChNoise.NoiseLength = val & 0x3f
+		}
+		return
+	}
+}
+
+func soundSweepRead(c *CPU) (out uint8) {
+	out |= c.ChToneSweep.SweepShift
+	out |= uint8(c.ChToneSweep.SweepDirection) << 3
+	out |= uint8(c.ChToneSweep.SweepShift) << 4
+	return
+}
+
+func soundSweepWrite(c *CPU, val uint8) {
+	c.ChToneSweep.SweepShift = val & 0x07
+	c.ChToneSweep.SweepDirection = sweepDirection((val >> 3) & 0x1)
+	c.ChToneSweep.SweepTime = sweepTime((val >> 4) & 0x07)
+}
+
+func soundEnvelopeRead(ch channelType) IOReadHandler {
+	return func(c *CPU) (out uint8) {
+		sndch := getchannel(c, ch)
+		out |= uint8(sndch.Envelope.Sweep)
+		out |= uint8(sndch.Envelope.Direction) << 3
+		out |= sndch.Envelope.InitialVolume << 4
+		return
+	}
+}
+
+func soundEnvelopeWrite(ch channelType) IOWriteHandler {
+	return func(c *CPU, val uint8) {
+		sndch := getchannel(c, ch)
+		sndch.Envelope.Sweep = sweepTime(val & 0x07)
+		sndch.Envelope.Direction = sweepDirection((val >> 3) & 0x1)
+		sndch.Envelope.InitialVolume = (val >> 4) & 0xf
+	}
+}
+
+// Util functions
+
+func getchannel(c *CPU, ch channelType) *soundChannel {
+	switch ch {
+	case sndchToneSweep:
+		return &c.ChToneSweep
+	case sndchTone:
+		return &c.ChTone
+	case sndchWave:
+		return &c.ChWave
+	case sndchNoise:
+		return &c.ChNoise
+	}
+	panic("unreacheable")
 }

@@ -235,9 +235,25 @@ func (r ioregister) String() string {
 var ioreadhandlers = map[ioregister]IOReadHandler{
 	MIOInterruptFlags: func(c *CPU) uint8 { return c.interruptFlags() },
 	MIOSoundEnable:    soundEnableRead,
+	MIOSound1Sweep:    soundSweepRead,
+	MIOSound1Length:   soundLengthRead(sndchToneSweep),
+	MIOSound1Control:  soundEnvelopeRead(sndchToneSweep),
+	MIOSound2Length:   soundLengthRead(sndchTone),
+	MIOSound2Control:  soundEnvelopeRead(sndchTone),
+	MIOSound3Length:   soundLengthRead(sndchWave),
+	MIOSound4Length:   soundLengthRead(sndchNoise),
+	MIOSound4Control:  soundEnvelopeRead(sndchNoise),
 }
 
 var iowritehandlers = map[ioregister]IOWriteHandler{
 	MIOInterruptFlags: func(c *CPU, val uint8) { c.setInterruptFlags(val) },
 	MIOSoundEnable:    soundEnableWrite,
+	MIOSound1Sweep:    soundSweepWrite,
+	MIOSound1Length:   soundLengthWrite(sndchToneSweep),
+	MIOSound1Control:  soundEnvelopeWrite(sndchToneSweep),
+	MIOSound2Length:   soundLengthWrite(sndchTone),
+	MIOSound2Control:  soundEnvelopeWrite(sndchTone),
+	MIOSound3Length:   soundLengthWrite(sndchWave),
+	MIOSound4Length:   soundLengthWrite(sndchNoise),
+	MIOSound4Control:  soundEnvelopeWrite(sndchNoise),
 }
