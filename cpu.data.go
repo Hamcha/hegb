@@ -2094,6 +2094,59 @@ func (i instruction) Registers() []RegID {
 	return []RegID{}
 }
 
+func (i instruction) Width() uint8 {
+	switch i {
+	case
+		OpLoadImmediateB,
+		OpLoadImmediateC,
+		OpLoadImmediateD,
+		OpLoadImmediateE,
+		OpJumpRelativeNZ,
+		OpJumpRelativeZE,
+		OpLoadImmediateL,
+		OpJumpRelativeNC,
+		OpJumpRelativeNO,
+		OpJumpRelativeCA,
+		OpLoadImmediateA,
+		OpLoadImmediateIndirectHL,
+		OpLoadImmediateH,
+		OpAddImmediateANoCarry,
+		OpAddImmediateACarry,
+		OpSubImmediateANoCarry,
+		OpAndImmediateA,
+		OpSubImmediateACarry,
+		OpLoadHighAbsA,
+		OpAddImmediateSignedSP,
+		OpXorImmediateA,
+		OpLoadHighRegA,
+		OpOrImmediateA,
+		OpLoadOffsetHLSP,
+		OpCmpImmediateA:
+		return 2
+
+	case
+		OpLoadImmediateBC,
+		OpStoreMemSP,
+		OpLoadImmediateDE,
+		OpLoadImmediateHL,
+		OpLoadImmediateSP,
+		OpJumpAbsoluteNZ,
+		OpJumpAbsoluteNO,
+		OpCallNZ,
+		OpJumpAbsoluteZE,
+		OpCallZE,
+		OpCallNO,
+		OpJumpAbsoluteNC,
+		OpCallNC,
+		OpJumpAbsoluteCA,
+		OpCallCA,
+		OpStoreMemA,
+		OpLoadMemA:
+		return 3
+	}
+	return 1
+}
+
 // RegID identifies a register
 type RegID uint8
 
