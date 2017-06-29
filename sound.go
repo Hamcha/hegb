@@ -132,10 +132,8 @@ func soundLengthRead(ch channelType) IOReadHandler {
 		switch ch {
 		case sndchToneSweep:
 			out |= uint8(c.ChToneSweep.ToneDuty) << 6
-			out |= c.ChToneSweep.ToneLength
 		case sndchTone:
 			out |= uint8(c.ChTone.ToneDuty) << 6
-			out |= c.ChTone.ToneLength
 		case sndchWave:
 			out |= c.ChWave.WaveLength
 		case sndchNoise:
@@ -192,6 +190,44 @@ func soundEnvelopeWrite(ch channelType) IOWriteHandler {
 		sndch.Envelope.Sweep = sweepTime(val & 0x07)
 		sndch.Envelope.Direction = sweepDirection((val >> 3) & 0x1)
 		sndch.Envelope.InitialVolume = (val >> 4) & 0xf
+	}
+}
+
+func soundFreqLowWrite(ch channelType) IOWriteHandler {
+	return func(c *CPU, val uint8) {
+		sndch := getchannel(c, ch)
+		sndch.Frequency = (sndch.Frequency & 0xf0) | uint16(val)
+	}
+}
+
+func soundFreqHighRead(ch channelType) IOReadHandler {
+	return func(c *CPU) (out uint8) {
+		sndch := getchannel(c, ch)
+		if sndch.CounterConsec {
+			out |= 0x20
+		}
+		return
+	}
+}
+
+func soundFreqHighWrite(ch channelType) IOWriteHandler {
+	return func(c *CPU, val uint8) {
+		sndch := getchannel(c, ch)
+		sndch.Restart = val&0x40 == 0x40
+		sndch.CounterConsec = val&0x20 == 0x20
+		sndch.Frequency = (uint16(val&0x7) << 8) | (sndch.Frequency & 0xf)
+	}
+}
+
+func soundWaveReadByte(byteNum uint8) IOReadHandler {
+	return func(c *CPU) uint8 {
+		return c.ChWave.WavePattern[byteNum]
+	}
+}
+
+func soundWaveWriteByte(byteNum uint8) IOWriteHandler {
+	return func(c *CPU, val uint8) {
+		c.ChWave.WavePattern[byteNum] = val
 	}
 }
 

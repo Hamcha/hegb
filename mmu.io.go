@@ -59,22 +59,22 @@ const (
 	_                                                // ff2d <empty>
 	_                                                // ff2e <empty>
 	_                                                // ff2f <empty>
-	_                                                // ff30 <empty>
-	_                                                // ff31 <empty>
-	_                                                // ff32 <empty>
-	_                                                // ff33 <empty>
-	_                                                // ff34 <empty>
-	_                                                // ff35 <empty>
-	_                                                // ff36 <empty>
-	_                                                // ff37 <empty>
-	_                                                // ff38 <empty>
-	_                                                // ff39 <empty>
-	_                                                // ff3a <empty>
-	_                                                // ff3b <empty>
-	_                                                // ff3c <empty>
-	_                                                // ff3d <empty>
-	_                                                // ff3e <empty>
-	_                                                // ff3f <empty>
+	MIOSoundWave0                                    // ff30 Wave channel data # 1
+	MIOSoundWave1                                    // ff31 Wave channel data # 2
+	MIOSoundWave2                                    // ff32 Wave channel data # 3
+	MIOSoundWave3                                    // ff33 Wave channel data # 4
+	MIOSoundWave4                                    // ff34 Wave channel data # 5
+	MIOSoundWave5                                    // ff35 Wave channel data # 6
+	MIOSoundWave6                                    // ff36 Wave channel data # 7
+	MIOSoundWave7                                    // ff37 Wave channel data # 8
+	MIOSoundWave8                                    // ff38 Wave channel data # 9
+	MIOSoundWave9                                    // ff39 Wave channel data # 10
+	MIOSoundWaveA                                    // ff3a Wave channel data # 11
+	MIOSoundWaveB                                    // ff3b Wave channel data # 12
+	MIOSoundWaveC                                    // ff3c Wave channel data # 13
+	MIOSoundWaveD                                    // ff3d Wave channel data # 14
+	MIOSoundWaveE                                    // ff3e Wave channel data # 15
+	MIOSoundWaveF                                    // ff3f Wave channel data # 16
 	MIOLCDControl                                    // ff40 LCD Control
 	MIOLCDStatus                                     // ff41 LCD Status
 	MIOBGVerticalScroll                              // ff42 Background vertical scrolling
@@ -201,6 +201,38 @@ func (r ioregister) String() string {
 		return "Sound output terminal selector"
 	case MIOSoundEnable:
 		return "Sound ON/OFF"
+	case MIOSoundWave0:
+		return "Wave channel data # 1"
+	case MIOSoundWave1:
+		return "Wave channel data # 2"
+	case MIOSoundWave2:
+		return "Wave channel data # 3"
+	case MIOSoundWave3:
+		return "Wave channel data # 4"
+	case MIOSoundWave4:
+		return "Wave channel data # 5"
+	case MIOSoundWave5:
+		return "Wave channel data # 6"
+	case MIOSoundWave6:
+		return "Wave channel data # 7"
+	case MIOSoundWave7:
+		return "Wave channel data # 8"
+	case MIOSoundWave8:
+		return "Wave channel data # 9"
+	case MIOSoundWave9:
+		return "Wave channel data # 10"
+	case MIOSoundWaveA:
+		return "Wave channel data # 11"
+	case MIOSoundWaveB:
+		return "Wave channel data # 12"
+	case MIOSoundWaveC:
+		return "Wave channel data # 13"
+	case MIOSoundWaveD:
+		return "Wave channel data # 14"
+	case MIOSoundWaveE:
+		return "Wave channel data # 15"
+	case MIOSoundWaveF:
+		return "Wave channel data # 16"
 	case MIOLCDControl:
 		return "LCD Control"
 	case MIOLCDStatus:
@@ -238,11 +270,34 @@ var ioreadhandlers = map[ioregister]IOReadHandler{
 	MIOSound1Sweep:    soundSweepRead,
 	MIOSound1Length:   soundLengthRead(sndchToneSweep),
 	MIOSound1Control:  soundEnvelopeRead(sndchToneSweep),
+	MIOSound1FreqLow:  nil,
+	MIOSound1FreqHigh: soundFreqHighRead(sndchToneSweep),
 	MIOSound2Length:   soundLengthRead(sndchTone),
 	MIOSound2Control:  soundEnvelopeRead(sndchTone),
+	MIOSound2FreqLow:  nil,
+	MIOSound2FreqHigh: soundFreqHighRead(sndchTone),
 	MIOSound3Length:   soundLengthRead(sndchWave),
+	MIOSound3FreqLow:  nil,
+	MIOSound3FreqHigh: soundFreqHighRead(sndchWave),
 	MIOSound4Length:   soundLengthRead(sndchNoise),
 	MIOSound4Control:  soundEnvelopeRead(sndchNoise),
+	MIOSound4FreqHigh: soundFreqHighRead(sndchNoise),
+	MIOSoundWave0:     soundWaveReadByte(0),
+	MIOSoundWave1:     soundWaveReadByte(0x1),
+	MIOSoundWave2:     soundWaveReadByte(0x2),
+	MIOSoundWave3:     soundWaveReadByte(0x3),
+	MIOSoundWave4:     soundWaveReadByte(0x4),
+	MIOSoundWave5:     soundWaveReadByte(0x5),
+	MIOSoundWave6:     soundWaveReadByte(0x6),
+	MIOSoundWave7:     soundWaveReadByte(0x7),
+	MIOSoundWave8:     soundWaveReadByte(0x8),
+	MIOSoundWave9:     soundWaveReadByte(0x9),
+	MIOSoundWaveA:     soundWaveReadByte(0xa),
+	MIOSoundWaveB:     soundWaveReadByte(0xb),
+	MIOSoundWaveC:     soundWaveReadByte(0xc),
+	MIOSoundWaveD:     soundWaveReadByte(0xd),
+	MIOSoundWaveE:     soundWaveReadByte(0xe),
+	MIOSoundWaveF:     soundWaveReadByte(0xf),
 }
 
 var iowritehandlers = map[ioregister]IOWriteHandler{
@@ -251,9 +306,32 @@ var iowritehandlers = map[ioregister]IOWriteHandler{
 	MIOSound1Sweep:    soundSweepWrite,
 	MIOSound1Length:   soundLengthWrite(sndchToneSweep),
 	MIOSound1Control:  soundEnvelopeWrite(sndchToneSweep),
+	MIOSound1FreqHigh: soundFreqHighWrite(sndchToneSweep),
+	MIOSound1FreqLow:  soundFreqLowWrite(sndchToneSweep),
 	MIOSound2Length:   soundLengthWrite(sndchTone),
 	MIOSound2Control:  soundEnvelopeWrite(sndchTone),
+	MIOSound2FreqHigh: soundFreqHighWrite(sndchTone),
+	MIOSound2FreqLow:  soundFreqLowWrite(sndchTone),
 	MIOSound3Length:   soundLengthWrite(sndchWave),
+	MIOSound3FreqHigh: soundFreqHighWrite(sndchWave),
+	MIOSound3FreqLow:  soundFreqLowWrite(sndchWave),
 	MIOSound4Length:   soundLengthWrite(sndchNoise),
 	MIOSound4Control:  soundEnvelopeWrite(sndchNoise),
+	MIOSound4FreqHigh: soundFreqHighWrite(sndchNoise),
+	MIOSoundWave0:     soundWaveWriteByte(0),
+	MIOSoundWave1:     soundWaveWriteByte(0x1),
+	MIOSoundWave2:     soundWaveWriteByte(0x2),
+	MIOSoundWave3:     soundWaveWriteByte(0x3),
+	MIOSoundWave4:     soundWaveWriteByte(0x4),
+	MIOSoundWave5:     soundWaveWriteByte(0x5),
+	MIOSoundWave6:     soundWaveWriteByte(0x6),
+	MIOSoundWave7:     soundWaveWriteByte(0x7),
+	MIOSoundWave8:     soundWaveWriteByte(0x8),
+	MIOSoundWave9:     soundWaveWriteByte(0x9),
+	MIOSoundWaveA:     soundWaveWriteByte(0xa),
+	MIOSoundWaveB:     soundWaveWriteByte(0xb),
+	MIOSoundWaveC:     soundWaveWriteByte(0xc),
+	MIOSoundWaveD:     soundWaveWriteByte(0xd),
+	MIOSoundWaveE:     soundWaveWriteByte(0xe),
+	MIOSoundWaveF:     soundWaveWriteByte(0xf),
 }

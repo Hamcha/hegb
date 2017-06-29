@@ -19,19 +19,28 @@ func TestIORegisterPresence(t *testing.T) {
 			continue
 		}
 		jsrows += fmt.Sprintf("<tr><td>%04X</td><td>%s</td>", uint16(regid), regid)
-		if _, ok := ioreadhandlers[regid]; !ok {
+		if regfn, ok := ioreadhandlers[regid]; !ok {
 			isok = false
 			fmt.Fprintf(os.Stderr, "IOReg R/%02X | %s is MISSING!\n", uint16(regid), regid)
 			jsrows += "<td class=\"regno\">✕</td>"
 		} else {
-			jsrows += "<td class=\"regok\">✓</td>"
+			if regfn == nil {
+				jsrows += "<td class=\"invalid\"></td>"
+			} else {
+				jsrows += "<td class=\"regok\">✓</td>"
+			}
 		}
-		if _, ok := iowritehandlers[regid]; !ok {
+		if regfn, ok := iowritehandlers[regid]; !ok {
 			isok = false
 			fmt.Fprintf(os.Stderr, "IOReg W/%02X | %s is MISSING!\n", uint16(regid), regid)
 			jsrows += "<td class=\"regno\">✕</td>"
 		} else {
-			jsrows += "<td class=\"regok\">✓</td>"
+			if regfn == nil {
+				jsrows += "<td class=\"invalid\">✓</td>"
+			} else {
+				jsrows += "<td class=\"regok\">✓</td>"
+
+			}
 		}
 		jsrows += "</tr>"
 		if isok {
